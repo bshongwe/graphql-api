@@ -5,9 +5,11 @@ import { startStandaloneServer } from "@apollo/server/standalone";
 import { readFileSync } from "node:fs";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { collectDefaultMetrics, register } from "prom-client";
+import { GraphQLError } from "graphql";
 import { logger } from "./infrastructure/logger.js";
 import { createContext } from "./context.js";
 import { resolvers } from "./graphql/resolvers/index.js";
+import { AppError } from "./utils/errorHandler.js";
 
 // Load environment variables
 import "dotenv/config";
@@ -22,9 +24,24 @@ async function bootstrap() {
   // Create Apollo Server
   const server = new ApolloServer({
     schema: makeExecutableSchema({ typeDefs, resolvers }),
-    formatError: (err) => {
+    formatError: (err: any) => {
       // Central error mapping; keep messages safe for clients
       logger.error({ err }, "GraphQL error");
+      
+      // Extract AppError details if available
+      const originalError = err.originalError;
+      if (originalError instanceof AppError) {
+        return {
+          message: originalError.message,
+          code: originalError.code,
+          path: err.path,
+          extensions: {
+            code: originalError.code,
+            httpStatus: originalError.httpStatus,
+          },
+        };
+      }
+      
       return {
         message: err.message,
         code: err.extensions?.code,
