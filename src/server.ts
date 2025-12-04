@@ -4,9 +4,6 @@ import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { readFileSync } from "node:fs";
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
 import { collectDefaultMetrics, register } from "prom-client";
 import { logger } from "./infrastructure/logger.js";
 import { createContext } from "./context.js";
@@ -18,20 +15,6 @@ import "dotenv/config";
 async function bootstrap() {
   // Initialize metrics collection
   collectDefaultMetrics();
-
-  // Create PostgreSQL connection pool
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-  });
-
-  // Create Prisma adapter for PostgreSQL
-  const adapter = new PrismaPg(pool);
-
-  // Initialize Prisma client
-  const prisma = new PrismaClient({
-    adapter,
-    log: ['error', 'warn'],
-  });
 
   // Load GraphQL schema
   const typeDefs = readFileSync('./src/graphql/schema.graphql', 'utf8');
@@ -54,7 +37,7 @@ async function bootstrap() {
 
   // Start the standalone server
   const { url } = await startStandaloneServer(server, {
-    context: async () => createContext({ prisma }),
+    context: async () => createContext(),
     listen: { port: Number(port) },
   });
 
