@@ -1,9 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import { AuthService } from './application/authService.js';
 import { UserService } from './application/userService.js';
+import { UserRepository } from './infrastructure/userRepository.js';
 
 interface User {
-  id: number;
+  id: number | null;
   name: string;
   email: string;
   role: string;
@@ -23,8 +24,10 @@ interface CreateContextParams {
 }
 
 export async function createContext({ req, prisma }: CreateContextParams): Promise<Context> {
-  const authService = new AuthService(prisma);
-  const userService = new UserService(prisma);
+  // Create repository and services with proper dependency injection
+  const userRepository = new UserRepository(prisma);
+  const userService = new UserService(userRepository);
+  const authService = new AuthService(userService);
   
   // Extract token from Authorization header
   let currentUser: User | null = null;
