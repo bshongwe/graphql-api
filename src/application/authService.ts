@@ -1,29 +1,18 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
 import { UserService } from './userService.js';
+import { User } from '../domain/user.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export class AuthService {
-  private userService: UserService;
-
-  constructor(private prisma: PrismaClient) {
-    this.userService = new UserService(prisma);
-  }
+  constructor(private readonly userService: UserService) {}
 
   async signUp({ name, email, password }: { name: string; email: string; password: string }) {
-    // Check if user already exists
-    const existingUser = await this.userService.findByEmail(email);
-
-    if (existingUser) {
-      throw new Error('User already exists with this email');
-    }
-
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
+    // Create user (UserService will handle validation and duplicate check)
     const user = await this.userService.create({
       name,
       email,
@@ -40,12 +29,7 @@ export class AuthService {
 
     return {
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: user.toPublic(),
     };
   }
 
@@ -73,12 +57,7 @@ export class AuthService {
 
     return {
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: user.toPublic(),
     };
   }
 
@@ -86,7 +65,7 @@ export class AuthService {
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; email: string };
       const user = await this.userService.findById(decoded.userId);
-      return user;
+      return user.toPublic();
     } catch {
       return null;
     }
