@@ -37,7 +37,7 @@ async function bootstrap() {
 
   // Start the standalone server
   const { url } = await startStandaloneServer(server, {
-    context: async () => createContext(),
+    context: async ({ req }) => createContext({ req }),
     listen: { port: Number(port) },
   });
 
