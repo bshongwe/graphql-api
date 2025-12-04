@@ -65,7 +65,7 @@ export class AuthService {
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; email: string };
       const user = await this.userService.findById(decoded.userId);
-      return user.toPublic();
+      return user ? user.toPublic() : null;
     } catch {
       return null;
     }
