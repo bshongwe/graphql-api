@@ -1,5 +1,6 @@
 import { User } from '../domain/user.js';
 import { UserRepositoryInterface } from '../domain/userRepositoryInterface.js';
+import { NotFoundError, ValidationError, ConflictError } from '../utils/errorHandler.js';
 
 export class UserService {
   constructor(private readonly userRepository: UserRepositoryInterface) {}
@@ -12,7 +13,7 @@ export class UserService {
     const user = await this.userRepository.findById(id);
     
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundError('User not found');
     }
 
     return user;
@@ -26,13 +27,13 @@ export class UserService {
     // Validate email format
     const tempUser = new User(null, data.name, data.email, data.password, data.role as any);
     if (!tempUser.isValidEmail()) {
-      throw new Error('Invalid email format');
+      throw new ValidationError('Invalid email format');
     }
 
     // Check if user already exists
     const existingUser = await this.userRepository.findByEmail(data.email);
     if (existingUser) {
-      throw new Error('User already exists with this email');
+      throw new ConflictError('User already exists with this email');
     }
 
     return this.userRepository.create(data);
@@ -43,7 +44,7 @@ export class UserService {
     if (data.email) {
       const tempUser = new User(null, '', data.email, '', 'USER');
       if (!tempUser.isValidEmail()) {
-        throw new Error('Invalid email format');
+        throw new ValidationError('Invalid email format');
       }
     }
 
@@ -53,7 +54,7 @@ export class UserService {
   async delete(id: number): Promise<void> {
     const user = await this.userRepository.findById(id);
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundError('User not found');
     }
 
     return this.userRepository.delete(id);
