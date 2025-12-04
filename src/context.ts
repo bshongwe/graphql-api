@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { AuthService } from './application/authService.js';
 import { UserService } from './application/userService.js';
 import { UserRepository } from './infrastructure/userRepository.js';
+import { prisma } from './infrastructure/prismaClient.js';
 
 interface User {
   id: number | null;
@@ -11,7 +11,6 @@ interface User {
 }
 
 interface Context {
-  prisma: PrismaClient;
   authService: AuthService;
   userService: UserService;
   currentUser?: User | null;
@@ -20,11 +19,10 @@ interface Context {
 
 interface CreateContextParams {
   req?: any;
-  prisma: PrismaClient;
 }
 
-export async function createContext({ req, prisma }: CreateContextParams): Promise<Context> {
-  // Create repository and services with proper dependency injection
+export async function createContext({ req }: CreateContextParams = {}): Promise<Context> {
+  // Create repository and services with proper dependency injection using centralized prisma client
   const userRepository = new UserRepository(prisma);
   const userService = new UserService(userRepository);
   const authService = new AuthService(userService);
@@ -37,7 +35,6 @@ export async function createContext({ req, prisma }: CreateContextParams): Promi
   }
 
   return {
-    prisma,
     authService,
     userService,
     currentUser,
