@@ -1,17 +1,20 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { UserService } from './userService.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export class AuthService {
-  constructor(private prisma: PrismaClient) {}
+  private userService: UserService;
 
-  async signUp(name: string, email: string, password: string) {
+  constructor(private prisma: PrismaClient) {
+    this.userService = new UserService(prisma);
+  }
+
+  async signUp({ name, email, password }: { name: string; email: string; password: string }) {
     // Check if user already exists
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await this.userService.findByEmail(email);
 
     if (existingUser) {
       throw new Error('User already exists with this email');
@@ -21,13 +24,11 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
-    const user = await this.prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        role: 'USER',
-      },
+    const user = await this.userService.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: 'USER',
     });
 
     // Generate JWT token
@@ -48,11 +49,9 @@ export class AuthService {
     };
   }
 
-  async signIn(email: string, password: string) {
+  async signIn({ email, password }: { email: string; password: string }) {
     // Find user
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await this.userService.findByEmail(email);
 
     if (!user) {
       throw new Error('Invalid credentials');
@@ -86,20 +85,8 @@ export class AuthService {
   async getUserFromToken(token: string) {
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; email: string };
-      const user = await this.prisma.user.findUnique({
-        where: { id: decoded.userId },
-      });
-
-      if (!user) {
-        return null;
-      }
-
-      return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      };
+      const user = await this.userService.findById(decoded.userId);
+      return user;
     } catch {
       return null;
     }
