@@ -1,32 +1,16 @@
-import { PrismaClient } from '@prisma/client';
+import { User } from '../domain/user.js';
+import { UserRepositoryInterface } from '../domain/userRepositoryInterface.js';
 
 export class UserService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private readonly userRepository: UserRepositoryInterface) {}
 
-  async findAll() {
-    return this.prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-      },
-    });
+  async findAll(): Promise<User[]> {
+    return this.userRepository.findAll();
   }
 
-  async findById(id: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-      },
-    });
-
+  async findById(id: number): Promise<User> {
+    const user = await this.userRepository.findById(id);
+    
     if (!user) {
       throw new Error('User not found');
     }
@@ -34,25 +18,44 @@ export class UserService {
     return user;
   }
 
-  async findByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email },
-    });
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findByEmail(email);
   }
 
-  async create(data: { name: string; email: string; password: string; role?: string }) {
-    return this.prisma.user.create({
-      data: {
-        ...data,
-        role: data.role || 'USER',
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-      },
-    });
+  async create(data: { name: string; email: string; password: string; role?: string }): Promise<User> {
+    // Validate email format
+    const tempUser = new User(null, data.name, data.email, data.password, data.role as any);
+    if (!tempUser.isValidEmail()) {
+      throw new Error('Invalid email format');
+    }
+
+    // Check if user already exists
+    const existingUser = await this.userRepository.findByEmail(data.email);
+    if (existingUser) {
+      throw new Error('User already exists with this email');
+    }
+
+    return this.userRepository.create(data);
+  }
+
+  async update(id: number, data: Partial<{ name: string; email: string; password: string; role: string }>): Promise<User> {
+    // Validate email format if email is being updated
+    if (data.email) {
+      const tempUser = new User(null, '', data.email, '', 'USER');
+      if (!tempUser.isValidEmail()) {
+        throw new Error('Invalid email format');
+      }
+    }
+
+    return this.userRepository.update(id, data);
+  }
+
+  async delete(id: number): Promise<void> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return this.userRepository.delete(id);
   }
 }
