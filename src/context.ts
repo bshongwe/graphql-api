@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { AuthService } from './application/authService.js';
+import { UserService } from './application/userService.js';
 
 interface User {
   id: number;
@@ -11,6 +12,7 @@ interface User {
 interface Context {
   prisma: PrismaClient;
   authService: AuthService;
+  userService: UserService;
   currentUser?: User | null;
   req?: any;
 }
@@ -22,6 +24,7 @@ interface CreateContextParams {
 
 export async function createContext({ req, prisma }: CreateContextParams): Promise<Context> {
   const authService = new AuthService(prisma);
+  const userService = new UserService(prisma);
   
   // Extract token from Authorization header
   let currentUser: User | null = null;
@@ -33,6 +36,7 @@ export async function createContext({ req, prisma }: CreateContextParams): Promi
   return {
     prisma,
     authService,
+    userService,
     currentUser,
     req,
   };
