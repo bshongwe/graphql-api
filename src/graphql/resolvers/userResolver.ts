@@ -1,11 +1,12 @@
 import { UserService } from "../../application/userService.js";
 import { AuthService } from "../../application/authService.js";
+import { createLoaders } from "../dataloaders.js";
 
 interface Context {
-  prisma: any;
   authService: AuthService;
   userService: UserService;
   currentUser?: any;
+  loaders: ReturnType<typeof createLoaders>;
 }
 
 export const userResolver = {
@@ -19,9 +20,19 @@ export const userResolver = {
       return users.map(user => user.toPublic());
     },
     me: async (_: any, __: any, context: Context) => {
-      if (!context.currentUser || !context.currentUser.id) return null;
-      const user = await context.userService.findById(context.currentUser.id);
-      return user.toPublic();
+      if (!context.currentUser?.id) return null;
+      
+      // Option 1: Use DataLoader for potential caching/batching benefits
+      const user = await context.loaders.userLoader.load(context.currentUser.id);
+      if (!user) return null;
+      
+      // Convert Prisma result to domain model and return public data
+      const { password, ...publicData } = user;
+      return publicData;
+      
+      // Option 2: Use service layer (uncomment if you prefer domain model approach)
+      // const user = await context.userService.findById(context.currentUser.id);
+      // return user.toPublic();
     }
   },
   Mutation: {
