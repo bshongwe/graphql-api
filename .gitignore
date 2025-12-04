@@ -6,3 +6,5 @@ prisma/dev.db
 *.log
 .DS_Store
 coverage/
+
+/generated/prisma
