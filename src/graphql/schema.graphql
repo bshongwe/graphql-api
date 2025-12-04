@@ -1,31 +1,21 @@
+type Query {
+  users: [User!]!
+  me: User
+}
+
+type Mutation {
+  signUp(name: String!, email: String!, password: String!): AuthPayload!
+  signIn(email: String!, password: String!): AuthPayload!
+}
+
 type User {
   id: ID!
   name: String!
   email: String!
-  password: String!
   role: String!
-  createdAt: String!
-  posts: [Post!]!
 }
 
-type Post {
-  id: ID!
-  title: String!
-  content: String
-  authorId: Int!
-  author: User!
-  createdAt: String!
-}
-
-type Query {
-  hello: String!
-  users: [User!]!
-  posts: [Post!]!
-  user(id: Int!): User
-  post(id: Int!): Post
-}
-
-type Mutation {
-  createUser(name: String!, email: String!, password: String!, role: String): User!
-  createPost(title: String!, content: String, authorId: Int!): Post!
+type AuthPayload {
+  token: String!
+  user: User!
 }
