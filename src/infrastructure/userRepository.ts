@@ -18,6 +18,18 @@ export class UserRepository implements UserRepositoryInterface {
     return user ? User.fromPrisma(user) : null;
   }
 
+  async findByIds(ids: number[]): Promise<User[]> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: ids
+        }
+      }
+    });
+    
+    return users.map(user => User.fromPrisma(user));
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
       where: { email },
