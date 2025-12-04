@@ -15,11 +15,13 @@ export const userResolver = {
       if (!context.currentUser || context.currentUser.role !== "ADMIN") {
         throw new Error("Unauthorized");
       }
-      return context.userService.findAll();
+      const users = await context.userService.findAll();
+      return users.map(user => user.toPublic());
     },
     me: async (_: any, __: any, context: Context) => {
-      if (!context.currentUser) return null;
-      return context.userService.findById(context.currentUser.id);
+      if (!context.currentUser || !context.currentUser.id) return null;
+      const user = await context.userService.findById(context.currentUser.id);
+      return user.toPublic();
     }
   },
   Mutation: {
