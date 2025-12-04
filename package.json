@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "dev": "node --loader ts-node/esm --watch src/dev-server.ts",
+    "dev": "tsx watch src/dev-server.ts",
     "start": "node dist/server.js",
     "build": "tsc",
     "prisma:generate": "prisma generate",
@@ -18,9 +18,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "@apollo/server": "^5.2.0",
+    "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
@@ -31,6 +32,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
+    "pg": "^8.16.3",
     "pino": "^10.1.0",
     "prisma": "^7.1.0"
   },
@@ -41,6 +43,7 @@
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
+    "@types/pg": "^8.15.6",
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
     "@typescript-eslint/parser": "^8.48.1",
@@ -51,6 +54,7 @@
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.6",
     "ts-node-dev": "^2.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }
