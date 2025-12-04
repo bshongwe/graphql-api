@@ -1,50 +1,38 @@
+interface Context {
+  prisma: any;
+  authService: any;
+  currentUser?: any;
+}
+
 export const resolvers = {
   Query: {
-    hello: () => 'Hello from GraphQL Enterprise Demo!',
-    users: async (_parent: any, _args: any, context: any) => {
-      return context.prisma.user.findMany({
-        include: { posts: true }
+    users: async (_parent: any, _args: any, context: Context) => {
+      // Return users without sensitive data
+      const users = await context.prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
       });
+      return users;
     },
-    posts: async (_parent: any, _args: any, context: any) => {
-      return context.prisma.post.findMany({
-        include: { author: true }
-      });
-    },
-    user: async (_parent: any, args: any, context: any) => {
-      return context.prisma.user.findUnique({
-        where: { id: args.id },
-        include: { posts: true }
-      });
-    },
-    post: async (_parent: any, args: any, context: any) => {
-      return context.prisma.post.findUnique({
-        where: { id: args.id },
-        include: { author: true }
-      });
+    me: async (_parent: any, _args: any, context: Context) => {
+      if (!context.currentUser) {
+        throw new Error('Not authenticated');
+      }
+      return context.currentUser;
     },
   },
   Mutation: {
-    createUser: async (_parent: any, args: any, context: any) => {
-      return context.prisma.user.create({
-        data: {
-          name: args.name,
-          email: args.email,
-          password: args.password,
-          role: args.role || 'USER',
-        },
-        include: { posts: true }
-      });
+    signUp: async (_parent: any, args: any, context: Context) => {
+      const { name, email, password } = args;
+      return context.authService.signUp(name, email, password);
     },
-    createPost: async (_parent: any, args: any, context: any) => {
-      return context.prisma.post.create({
-        data: {
-          title: args.title,
-          content: args.content,
-          authorId: args.authorId,
-        },
-        include: { author: true }
-      });
+    signIn: async (_parent: any, args: any, context: Context) => {
+      const { email, password } = args;
+      return context.authService.signIn(email, password);
     },
   },
 };
