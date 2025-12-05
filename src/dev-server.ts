@@ -1,7 +1,8 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { readFileSync } from 'node:fs';
-import { makeExecutableSchema } from '@graphql-tools/schema';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import { parse } from 'graphql';
 import { resolvers } from './graphql/resolvers/index.js';
 import { createContext } from './context.js';
 import { AppError } from './utils/errorHandler.js';
@@ -12,7 +13,7 @@ import 'dotenv/config';
 const typeDefs = readFileSync('./src/graphql/schema.graphql', 'utf8');
 
 const server = new ApolloServer({
-  schema: makeExecutableSchema({ typeDefs, resolvers }),
+  schema: buildSubgraphSchema([{ typeDefs: parse(typeDefs), resolvers }]),
   formatError: (err: any) => {
     console.error('GraphQL error:', err);
     

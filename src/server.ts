@@ -3,9 +3,9 @@ import express from "express";
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { readFileSync } from "node:fs";
-import { makeExecutableSchema } from "@graphql-tools/schema";
+import { buildSubgraphSchema } from "@apollo/subgraph";
+import { parse } from "graphql";
 import { collectDefaultMetrics, register } from "prom-client";
-import { GraphQLError } from "graphql";
 import { logger } from "./infrastructure/logger.js";
 import { createContext } from "./context.js";
 import { resolvers } from "./graphql/resolvers/index.js";
@@ -23,7 +23,7 @@ async function bootstrap() {
 
   // Create Apollo Server
   const server = new ApolloServer({
-    schema: makeExecutableSchema({ typeDefs, resolvers }),
+    schema: buildSubgraphSchema([{ typeDefs: parse(typeDefs), resolvers }]),
     formatError: (err: any) => {
       // Central error mapping; keep messages safe for clients
       logger.error({ err }, "GraphQL error");
