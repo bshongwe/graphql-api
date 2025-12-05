@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: graphql-api
+  labels:
+    name: graphql-api
+    app.kubernetes.io/name: graphql-api
+    app.kubernetes.io/version: "1.0.0"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: graphql-api-config
+  namespace: graphql-api
+  labels:
+    app: graphql-api
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  DATABASE_URL: "postgresql://postgres:password@postgres-service:5432/graphqlapi"
+  # OpenTelemetry configuration
+  OTEL_SERVICE_NAME: "graphql-api"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger-collector:14268/api/traces"
+  # Metrics
+  METRICS_PORT: "3001"
+  # GraphQL
+  GRAPHQL_PLAYGROUND: "false"
+  GRAPHQL_INTROSPECTION: "false"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: graphql-api-secrets
+  namespace: graphql-api
+  labels:
+    app: graphql-api
+type: Opaque
+data:
+  # Base64 encoded secrets
+  JWT_SECRET: "c3VwZXItc2VjdXJlLWp3dC1zZWNyZXQtZm9yLXByb2R1Y3Rpb24=" # super-secure-jwt-secret-for-production
+  REDIS_PASSWORD: ""  # Empty if no Redis password
+  DATABASE_PASSWORD: "cGFzc3dvcmQ="  # password
+  DASHBOARD_TOKEN: "ZGFzaGJvYXJkLWFkbWluLXRva2VuLTEyMw=="  # dashboard-admin-token-123
