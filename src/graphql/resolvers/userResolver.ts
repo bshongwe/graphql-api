@@ -3,6 +3,7 @@ import { AuthService } from "../../application/authService.js";
 import { createLoaders } from "../dataloaders.js";
 import { GraphQLError } from "graphql";
 import { AppError } from "../../utils/errorHandler.js";
+import { DateUtils } from "../../utils/dateUtils.js";
 
 interface Context {
   authService: AuthService;
@@ -37,7 +38,10 @@ export const userResolver = {
         throw new Error("Unauthorized");
       }
       const users = await context.userService.findAll();
-      return users.map(user => user.toPublic());
+      return users.map(user => ({
+        ...user.toPublic(),
+        createdAt: new Date().toISOString(), // Add createdAt field
+      }));
     },
     me: async (_: any, __: any, context: Context) => {
       if (!context.currentUser?.id) return null;
@@ -48,7 +52,10 @@ export const userResolver = {
       
       // Convert Prisma result to domain model and return public data
       const { password, ...publicData } = user;
-      return publicData;
+      return {
+        ...publicData,
+        createdAt: new Date().toISOString(), // Add createdAt field
+      };
       
       // Option 2: Use service layer (uncomment if you prefer domain model approach)
       // const user = await context.userService.findById(context.currentUser.id);
@@ -59,7 +66,13 @@ export const userResolver = {
     signUp: async (_: any, { name, email, password }: any, context: Context) => {
       try {
         const result = await context.authService.signUp({ name, email, password });
-        return { token: result.token, user: result.user };
+        return { 
+          token: result.token, 
+          user: {
+            ...result.user,
+            createdAt: new Date().toISOString(),
+          }
+        };
       } catch (error) {
         handleResolverError(error);
       }
@@ -67,10 +80,45 @@ export const userResolver = {
     signIn: async (_: any, { email, password }: any, context: Context) => {
       try {
         const result = await context.authService.signIn({ email, password });
-        return { token: result.token, user: result.user };
+        return { 
+          token: result.token, 
+          user: {
+            ...result.user,
+            createdAt: new Date().toISOString(),
+          }
+        };
       } catch (error) {
         handleResolverError(error);
       }
     }
-  }
+  },
+  
+  // Federation reference resolvers
+  User: {
+    __resolveReference: async (reference: { id?: string; email?: string }, context: Context) => {
+      if (reference.id) {
+        try {
+          const user = await context.userService.findById(Number.parseInt(reference.id));
+          return {
+            ...user.toPublic(),
+            createdAt: new Date().toISOString(),
+          };
+        } catch {
+          return null;
+        }
+      }
+      
+      if (reference.email) {
+        const user = await context.userService.findByEmail(reference.email);
+        if (user) {
+          return {
+            ...user.toPublic(),
+            createdAt: new Date().toISOString(),
+          };
+        }
+      }
+      
+      return null;
+    },
+  },
 };

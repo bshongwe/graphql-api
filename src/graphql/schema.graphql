@@ -1,5 +1,8 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable", "@provides", "@requires", "@external", "@tag", "@override", "@inaccessible"])
+
 type Query {
-  users: [User!]!
+  users: [User!]! @shareable
   me: User
 }
 
@@ -8,11 +11,12 @@ type Mutation {
   signIn(email: String!, password: String!): AuthPayload!
 }
 
-type User {
+type User @key(fields: "id") @key(fields: "email") {
   id: ID!
   name: String!
   email: String!
   role: String!
+  createdAt: String! @shareable
 }
 
 type AuthPayload {
