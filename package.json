@@ -6,7 +6,9 @@
   "scripts": {
     "test": "jest",
     "dev": "tsx watch src/dev-server.ts",
+    "dev:gateway": "tsx watch gateway/server.ts",
     "start": "node dist/server.js",
+    "start:gateway": "node dist/gateway/server.js",
     "build": "tsc",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
@@ -20,7 +22,11 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@apollo/composition": "^2.12.1",
+    "@apollo/federation-internals": "^2.12.1",
+    "@apollo/gateway": "^2.12.1",
     "@apollo/server": "^5.2.0",
+    "@apollo/subgraph": "^2.12.1",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/auto-instrumentations-node": "^0.67.2",
     "@opentelemetry/exporter-jaeger": "^2.2.0",
