@@ -2,6 +2,7 @@ node_modules/
 dist/
 .env
 .env.local
+.env.test
 prisma/dev.db
 *.log
 .DS_Store
