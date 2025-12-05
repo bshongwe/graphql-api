@@ -10,6 +10,10 @@ import { logger } from "./infrastructure/logger.js";
 import { createContext } from "./context.js";
 import { resolvers } from "./graphql/resolvers/index.js";
 import { AppError } from "./utils/errorHandler.js";
+import { initializePubSub, closePubSub } from "./infrastructure/pubsub.js";
+import { initializeJobQueues, closeJobQueues } from "./infrastructure/jobQueue.js";
+import { startJobWorkers, stopJobWorkers } from "./infrastructure/jobWorkers.js";
+import { createJobDashboard, dashboardAuthMiddleware } from "./infrastructure/jobDashboard.js";
 
 // Load environment variables
 import "dotenv/config";
@@ -17,6 +21,23 @@ import "dotenv/config";
 async function bootstrap() {
   // Initialize metrics collection
   collectDefaultMetrics();
+  
+  // Initialize Redis PubSub for subscriptions
+  try {
+    await initializePubSub();
+    logger.info('Redis PubSub initialized for subscriptions');
+  } catch (error) {
+    logger.warn(error, 'Redis PubSub initialization failed, subscriptions may not work');
+  }
+
+  // Initialize job queues and workers
+  try {
+    await initializeJobQueues();
+    await startJobWorkers();
+    logger.info('Job queues and workers initialized');
+  } catch (error) {
+    logger.warn(error, 'Job queue initialization failed, background jobs may not work');
+  }
 
   // Load GraphQL schema
   const typeDefs = readFileSync('./src/graphql/schema.graphql', 'utf8');
@@ -74,6 +95,15 @@ async function bootstrap() {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // Job dashboard (with basic auth)
+  try {
+    const { router } = createJobDashboard();
+    metricsApp.use('/admin/queues', dashboardAuthMiddleware(), router);
+    logger.info('Job dashboard available at /admin/queues');
+  } catch (error) {
+    logger.warn(error, 'Failed to setup job dashboard');
+  }
+
   const metricsPort = Number(port) + 1;
   metricsApp.listen(metricsPort, () => {
     logger.info(`📊 Metrics available at http://localhost:${metricsPort}/metrics`);
@@ -85,6 +115,22 @@ async function bootstrap() {
     logger.info('SIGINT signal received: closing servers');
     await server.stop();
     logger.info('Apollo server stopped');
+    
+    try {
+      await closePubSub();
+      logger.info('Redis PubSub closed');
+    } catch (error) {
+      logger.error(error, 'Error closing Redis PubSub');
+    }
+
+    try {
+      await stopJobWorkers();
+      await closeJobQueues();
+      logger.info('Job queues and workers closed');
+    } catch (error) {
+      logger.error(error, 'Error closing job queues');
+    }
+    
     process.exit(0);
   });
 }

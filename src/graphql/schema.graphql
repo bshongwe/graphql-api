@@ -9,6 +9,15 @@ type Query {
 type Mutation {
   signUp(name: String!, email: String!, password: String!): AuthPayload!
   signIn(email: String!, password: String!): AuthPayload!
+  updateUserProfile(name: String, email: String): User!
+  deleteUser(id: ID!): Boolean!
+}
+
+type Subscription {
+  userCreated: UserCreatedPayload!
+  userUpdated(userId: ID): UserUpdatedPayload!
+  userDeleted: UserDeletedPayload!
+  userOnline(userId: ID): UserOnlinePayload!
 }
 
 type User @key(fields: "id") @key(fields: "email") {
@@ -22,4 +31,27 @@ type User @key(fields: "id") @key(fields: "email") {
 type AuthPayload {
   token: String!
   user: User!
+}
+
+type UserCreatedPayload {
+  user: User!
+  timestamp: String!
+}
+
+type UserUpdatedPayload {
+  user: User!
+  previousValues: User
+  timestamp: String!
+}
+
+type UserDeletedPayload {
+  id: ID!
+  email: String!
+  timestamp: String!
+}
+
+type UserOnlinePayload {
+  user: User!
+  isOnline: Boolean!
+  timestamp: String!
 }
