@@ -1,0 +1,56 @@
+# Build stage
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy source code  
+COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build the application
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine AS production
+
+# Install security updates
+RUN apk update && apk upgrade
+
+# Create non-root user
+RUN addgroup -g 1000 -S graphql && \
+    adduser -u 1000 -S graphql -G graphql
+
+WORKDIR /app
+
+# Copy built application and dependencies from builder
+COPY --from=builder --chown=graphql:graphql /app/node_modules ./node_modules
+COPY --from=builder --chown=graphql:graphql /app/dist ./dist
+COPY --from=builder --chown=graphql:graphql /app/generated ./generated
+COPY --from=builder --chown=graphql:graphql /app/prisma ./prisma
+COPY --from=builder --chown=graphql:graphql /app/package*.json ./
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/logs /tmp && \
+    chown -R graphql:graphql /app/logs /tmp
+
+# Switch to non-root user
+USER graphql
+
+# Expose port
+EXPOSE 4000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD node -e "const http = require('http'); const options = { host: 'localhost', port: 4000, path: '/.well-known/apollo/server-health', timeout: 5000 }; const req = http.request(options, (res) => { if (res.statusCode === 200) { process.exit(0); } else { process.exit(1); } }); req.on('error', () => process.exit(1)); req.end();"
+
+# Start the application
+CMD ["node", "dist/server.js"]
