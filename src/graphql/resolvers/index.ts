@@ -1,4 +1,5 @@
 import { userResolver } from './userResolver.js';
+import { subscriptionResolvers } from './subscriptionResolvers.js';
 
 export const resolvers = {
   Query: {
@@ -6,5 +7,11 @@ export const resolvers = {
   },
   Mutation: {
     ...userResolver.Mutation,
+  },
+  Subscription: {
+    ...subscriptionResolvers.Subscription,
+  },
+  User: {
+    ...userResolver.User,
   },
 };

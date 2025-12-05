@@ -4,6 +4,8 @@ import { createLoaders } from "../dataloaders.js";
 import { GraphQLError } from "graphql";
 import { AppError } from "../../utils/errorHandler.js";
 import { DateUtils } from "../../utils/dateUtils.js";
+import { UserEventPublisher } from "../../infrastructure/pubsub.js";
+import { JobService, JOB_TYPES } from "../../infrastructure/jobQueue.js";
 
 interface Context {
   authService: AuthService;
@@ -66,12 +68,34 @@ export const userResolver = {
     signUp: async (_: any, { name, email, password }: any, context: Context) => {
       try {
         const result = await context.authService.signUp({ name, email, password });
+        const userPayload = {
+          ...result.user,
+          createdAt: new Date().toISOString(),
+        };
+        
+        // Publish subscription event
+        await UserEventPublisher.publishUserCreated(userPayload);
+        
+        // Queue background jobs for user processing
+        await JobService.addUserJob({
+          type: JOB_TYPES.PROCESS_USER_SIGNUP,
+          userId: userPayload.id?.toString() || 'unknown',
+          email: userPayload.email,
+          metadata: { source: 'graphql_signup' }
+        });
+
+        // Queue welcome email
+        await JobService.addEmailJob({
+          type: JOB_TYPES.SEND_WELCOME_EMAIL,
+          to: userPayload.email,
+          subject: 'Welcome to our platform!',
+          template: 'welcome',
+          variables: { name: userPayload.name }
+        });
+        
         return { 
           token: result.token, 
-          user: {
-            ...result.user,
-            createdAt: new Date().toISOString(),
-          }
+          user: userPayload
         };
       } catch (error) {
         handleResolverError(error);
@@ -87,6 +111,79 @@ export const userResolver = {
             createdAt: new Date().toISOString(),
           }
         };
+      } catch (error) {
+        handleResolverError(error);
+      }
+    },
+    
+    updateUserProfile: async (_: any, { name, email }: any, context: Context) => {
+      if (!context.currentUser?.id) {
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' }
+        });
+      }
+      
+      try {
+        // Get previous user data for subscription
+        const previousUser = await context.userService.findById(context.currentUser.id);
+        const previousValues = previousUser ? {
+          ...previousUser.toPublic(),
+          createdAt: new Date().toISOString(),
+        } : null;
+        
+        // Update user
+        const updatedUser = await context.userService.update(
+          context.currentUser.id, 
+          { name, email }
+        );
+        
+        const userPayload = {
+          ...updatedUser.toPublic(),
+          createdAt: new Date().toISOString(),
+        };
+        
+        // Publish subscription event
+        await UserEventPublisher.publishUserUpdated(userPayload, previousValues);
+        
+        return userPayload;
+      } catch (error) {
+        handleResolverError(error);
+      }
+    },
+    
+    deleteUser: async (_: any, { id }: any, context: Context) => {
+      if (!context.currentUser?.role || context.currentUser.role !== 'ADMIN') {
+        throw new GraphQLError('Admin access required', {
+          extensions: { code: 'FORBIDDEN' }
+        });
+      }
+      
+      try {
+        // Get user data before deletion for subscription
+        const userToDelete = await context.userService.findById(Number.parseInt(id, 10));
+        if (!userToDelete) {
+          throw new GraphQLError('User not found', {
+            extensions: { code: 'NOT_FOUND' }
+          });
+        }
+        
+        await context.userService.delete(Number.parseInt(id, 10));
+        
+        // Publish subscription event
+        await UserEventPublisher.publishUserDeleted({
+          id: userToDelete.id?.toString() || id,
+          email: userToDelete.email,
+        });
+
+        // Queue user deletion processing job
+        await JobService.addUserJob({
+          type: JOB_TYPES.PROCESS_USER_DELETION,
+          userId: userToDelete.id?.toString() || id,
+          email: userToDelete.email,
+          metadata: { deletedBy: context.currentUser?.id }
+        });
+        
+        return true;
       } catch (error) {
         handleResolverError(error);
       }
