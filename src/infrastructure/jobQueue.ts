@@ -8,11 +8,16 @@ import { logger } from './logger.js';
 const redisConnection = {
   host: process.env.REDIS_HOST || 'localhost',
   port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-  password: process.env.REDIS_PASSWORD,
-  db: Number.parseInt(process.env.REDIS_DB || '1', 10), // Use DB 1 for jobs (DB 0 for PubSub)
+  password: process.env.REDIS_PASSWORD || undefined,
+  db: Number.parseInt(process.env.REDIS_JOBS_DB || '1', 10), // Use DB 1 for jobs (DB 0 for PubSub)
   maxRetriesPerRequest: null, // Required by BullMQ
   retryDelayOnFailover: 100,
   enableOfflineQueue: false,
+  lazyConnect: true,
+  maxLoadingTimeout: 5000,
+  connectTimeout: 10000,
+  commandTimeout: 5000,
+  family: 4, // IPv4
 };
 
 /**
@@ -259,6 +264,23 @@ export class JobService {
  */
 export async function initializeJobQueues(): Promise<void> {
   try {
+    // Setup Redis error handling
+    redis.on('error', (error) => {
+      logger.error(error, 'Redis connection error');
+    });
+    
+    redis.on('connect', () => {
+      logger.info('Redis connected for job queues');
+    });
+    
+    redis.on('ready', () => {
+      logger.info('Redis ready for job queues');
+    });
+    
+    redis.on('close', () => {
+      logger.warn('Redis connection closed for job queues');
+    });
+    
     // Test Redis connection
     await redis.ping();
     logger.info('Redis connection established for job queues');

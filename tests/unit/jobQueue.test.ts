@@ -185,77 +185,24 @@ describe('BullMQ Job Processing', () => {
     });
   });
 });
-describe('BullMQ Job Processing', () => {
-  describe('Job Configuration', () => {
-    test('should validate job type naming conventions', () => {
-      // Test job type constants follow kebab-case
-      const validJobTypes = [
-        'send-welcome-email',
-        'send-password-reset',
-        'process-user-signup',
-        'process-user-deletion',
-        'send-notification',
-        'export-user-data',
-        'cleanup-expired-tokens'
-      ];
 
-      for (const jobType of validJobTypes) {
-        expect(typeof jobType).toBe('string');
-        expect(jobType).toMatch(/^[a-z-]+$/);
-        expect(jobType.length).toBeGreaterThan(0);
-      }
-    });
-
-    test('should validate queue naming conventions', () => {
-      // Test queue names follow pattern
-      const validQueueNames = [
-        'email-queue',
-        'user-processing-queue', 
-        'notifications-queue',
-        'data-export-queue'
-      ];
-
-      for (const queueName of validQueueNames) {
-        expect(typeof queueName).toBe('string');
-        expect(queueName).toMatch(/^[a-z-]+-queue$/);
-        expect(queueName.length).toBeGreaterThan(0);
-      }
-    });
-
-    test('should have logical job type groupings', () => {
-      // Email-related jobs
-      expect('send-welcome-email').toContain('email');
-      expect('send-password-reset').not.toContain('email');
-      
-      // User processing jobs
-      expect('process-user-signup').toContain('user');
-      expect('process-user-deletion').toContain('user');
-      
-      // Export jobs
-      expect('export-user-data').toContain('export');
-      expect('cleanup-expired-tokens').toContain('cleanup');
-    });
-
-    it('should have appropriate queue structure', () => {
-      // Test basic queue structure expectations
-      const queueTypes = ['email', 'user-processing', 'notifications', 'data-export'];
-      
-      for (const queueType of queueTypes) {
-        const queueName = `${queueType}-queue`;
-        expect(queueName).toMatch(/^[a-z-]+-queue$/);
-      }
-      
-      // Ensure we have a reasonable number of queues
-      expect(queueTypes.length).toBeGreaterThan(2);
-      expect(queueTypes.length).toBeLessThanOrEqual(6);
-    });
-  });
-
-  describe('Job Processing Patterns', () => {
     it('should follow consistent async job processing patterns', async () => {
       // Mock job data structure
       const mockJobData = {
         type: 'send-welcome-email',
+        to: 'test@example.com',
+        subject: 'Welcome',
+        template: 'welcome',
+        variables: { name: 'Test User' }
+      };
+
+      // Validate job data structure
+      expect(mockJobData.type).toMatch(/^[a-z-]+$/);
+      expect(mockJobData.to).toContain('@');
+      expect(typeof mockJobData.variables).toBe('object');
+    });
+  });
+});-email',
         to: 'user@example.com',
         subject: 'Welcome!',
         template: 'welcome',
