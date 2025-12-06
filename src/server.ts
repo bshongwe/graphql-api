@@ -1,5 +1,7 @@
 import "reflect-metadata";
 import express from "express";
+import helmet from "helmet";
+import cors from "cors";
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { readFileSync } from "node:fs";
@@ -18,7 +20,26 @@ import { createJobDashboard, dashboardAuthMiddleware } from "./infrastructure/jo
 // Load environment variables
 import "dotenv/config";
 
+// Validate required environment variables
+function validateEnvironment() {
+  const required = ['DATABASE_URL', 'JWT_SECRET'];
+  const missing = required.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    logger.error({ missing }, 'Missing required environment variables');
+    process.exit(1);
+  }
+  
+  if (process.env.JWT_SECRET === '<CHANGE-THIS-IN-PRODUCTION>') {
+    logger.error('JWT_SECRET must be changed from default value');
+    process.exit(1);
+  }
+}
+
 async function bootstrap() {
+  // Validate environment first
+  validateEnvironment();
+  
   // Initialize metrics collection
   collectDefaultMetrics();
   
@@ -83,6 +104,13 @@ async function bootstrap() {
 
   // Setup separate Express app for metrics and health endpoints
   const metricsApp = express();
+  
+  // Security middleware
+  metricsApp.use(helmet());
+  metricsApp.use(cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    credentials: true
+  }));
   
   // Metrics endpoint
   metricsApp.get("/metrics", async (_req, res) => {
