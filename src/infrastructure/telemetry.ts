@@ -5,7 +5,6 @@ import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
 
 const serviceName = process.env.SERVICE_NAME || 'graphql-api';
 const serviceVersion = process.env.SERVICE_VERSION || '1.0.0';
-const environment = process.env.NODE_ENV || 'development';
 
 // Configure exporters based on environment
 const getTracingExporter = () => {
@@ -65,7 +64,8 @@ export class TracingUtils {
     fn: (span: any) => Promise<T>, 
     attributes?: SpanAttributes
   ): Promise<T> {
-    return tracer.startActiveSpan(name, { attributes }, async (span) => {
+    const spanOptions = attributes ? { attributes } : {};
+    return tracer.startActiveSpan(name, spanOptions, async (span) => {
       try {
         const result = await fn(span);
         span.setStatus({ code: SpanStatusCode.OK });

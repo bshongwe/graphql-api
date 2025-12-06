@@ -8,11 +8,8 @@ import { logger } from './logger.js';
 const redisConfig = {
   host: process.env.REDIS_HOST || 'localhost',
   port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-  password: process.env.REDIS_PASSWORD,
-  db: Number.parseInt(process.env.REDIS_DB || '0', 10),
-  retryDelayOnFailover: 100,
-  enableReadyCheck: false,
-  maxRetriesPerRequest: null,
+  ...(process.env.REDIS_PASSWORD && { password: process.env.REDIS_PASSWORD }),
+  database: Number.parseInt(process.env.REDIS_DB || '0', 10),
 };
 
 /**
@@ -42,7 +39,7 @@ export async function initializePubSub(): Promise<void> {
     logger.info({
       host: redisConfig.host,
       port: redisConfig.port,
-      db: redisConfig.db,
+      database: redisConfig.database,
     }, 'Redis PubSub initialized successfully');
 
     // Handle Redis connection events

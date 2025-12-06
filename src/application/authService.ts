@@ -1,8 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { UserService } from './userService.js';
-import { User } from '../domain/user.js';
-import { AuthenticationError, ConflictError, ValidationError } from '../utils/errorHandler.js';
+import { AuthenticationError } from '../utils/errorHandler.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 

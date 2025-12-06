@@ -141,15 +141,15 @@ export class CursorPaginationUtils {
     totalCount: number,
     first?: number,
     after?: string,
-    last?: number,
-    before?: string
+    _last?: number,
+    _before?: string
   ): CursorPaginationResult<T> {
     const edges = items.map(item => ({
       node: item,
       cursor: this.encodeCursor(item.id),
     }));
 
-    const startCursor = edges.length > 0 ? edges[0].cursor : undefined;
+    const startCursor = edges.length > 0 ? edges[0]?.cursor : undefined;
     const endCursor = edges.length > 0 ? edges.at(-1)?.cursor : undefined;
 
     return {
@@ -157,8 +157,8 @@ export class CursorPaginationUtils {
       pageInfo: {
         hasNextPage: first ? edges.length === first : false,
         hasPreviousPage: Boolean(after),
-        startCursor,
-        endCursor,
+        ...(startCursor && { startCursor }),
+        ...(endCursor && { endCursor }),
       },
       totalCount,
     };

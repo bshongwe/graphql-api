@@ -27,7 +27,7 @@ export const subscriptionResolvers = {
           logger.info('New subscription to userUpdated');
           return pubSub.asyncIterator([SUBSCRIPTION_TOPICS.USER_UPDATED]);
         },
-        (payload, variables, context) => {
+        (payload, variables, _context) => {
           // Optional: Filter by user ID if provided
           if (variables.userId) {
             return payload.userUpdated.user.id === variables.userId;
@@ -57,7 +57,7 @@ export const subscriptionResolvers = {
           logger.info('New subscription to userOnline');
           return pubSub.asyncIterator([SUBSCRIPTION_TOPICS.USER_ONLINE]);
         },
-        (payload, variables, context) => {
+        (payload, variables, _context) => {
           // Optional: Filter by user ID if provided
           if (variables.userId) {
             return payload.userOnline.user.id === variables.userId;
@@ -76,7 +76,7 @@ export const subscriptionHandlers = {
   /**
    * Handle new WebSocket connections
    */
-  onConnect: async (connectionParams: any, webSocket: any, context: any) => {
+  onConnect: async (connectionParams: any, _webSocket: any, _context: any) => {
     logger.info({ connectionParams }, 'WebSocket connection established');
     
     // Optional: Extract auth token from connection params
@@ -100,14 +100,14 @@ export const subscriptionHandlers = {
   /**
    * Handle WebSocket disconnections
    */
-  onDisconnect: async (webSocket: any, context: any) => {
+  onDisconnect: async (_webSocket: any, _context: any) => {
     logger.info('WebSocket connection disconnected');
   },
 
   /**
    * Handle subscription start
    */
-  onOperationStart: async (message: any, params: any, webSocket: any) => {
+  onOperationStart: async (_message: any, params: any, _webSocket: any) => {
     logger.info({ 
       operationName: params.operationName,
       query: params.query.replaceAll(/\s+/g, ' ').trim()
@@ -119,7 +119,7 @@ export const subscriptionHandlers = {
   /**
    * Handle subscription stop
    */
-  onOperationComplete: async (webSocket: any, opId: string) => {
+  onOperationComplete: async (_webSocket: any, opId: string) => {
     logger.info({ operationId: opId }, 'Subscription operation completed');
   },
 };

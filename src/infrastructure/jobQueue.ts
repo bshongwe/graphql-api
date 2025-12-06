@@ -8,7 +8,7 @@ import { logger } from './logger.js';
 const redisConnection = {
   host: process.env.REDIS_HOST || 'localhost',
   port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-  password: process.env.REDIS_PASSWORD || undefined,
+  ...(process.env.REDIS_PASSWORD && { password: process.env.REDIS_PASSWORD }),
   db: Number.parseInt(process.env.REDIS_JOBS_DB || '1', 10), // Use DB 1 for jobs (DB 0 for PubSub)
   maxRetriesPerRequest: null, // Required by BullMQ
   retryDelayOnFailover: 100,

@@ -3,7 +3,6 @@ import { AuthService } from "../../application/authService.js";
 import { createLoaders } from "../dataloaders.js";
 import { GraphQLError } from "graphql";
 import { AppError } from "../../utils/errorHandler.js";
-import { DateUtils } from "../../utils/dateUtils.js";
 import { UserEventPublisher } from "../../infrastructure/pubsub.js";
 import { JobService, JOB_TYPES } from "../../infrastructure/jobQueue.js";
 

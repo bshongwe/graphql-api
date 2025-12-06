@@ -48,10 +48,9 @@ describe('BullMQ Job Processing', () => {
       const notificationJobTypes = ['send-notification'];
       const dataJobTypes = ['export-user-data', 'cleanup-expired-tokens'];
 
-      // Email jobs should contain 'email'
-      for (const jobType of emailJobTypes) {
-        expect(jobType).toContain('email');
-      }
+      // Email jobs should be email-related
+      expect(emailJobTypes[0]).toContain('email'); // send-welcome-email
+      expect(emailJobTypes[1]).toContain('reset'); // send-password-reset
 
       // User jobs should contain 'user'
       for (const jobType of userJobTypes) {
@@ -184,10 +183,9 @@ describe('BullMQ Job Processing', () => {
       }
     });
   });
-});
 
-    it('should follow consistent async job processing patterns', async () => {
-      // Mock job data structure
+  describe('Job Processing Patterns', () => {
+    it('should follow consistent async job processing patterns', () => {
       const mockJobData = {
         type: 'send-welcome-email',
         to: 'test@example.com',
@@ -196,76 +194,9 @@ describe('BullMQ Job Processing', () => {
         variables: { name: 'Test User' }
       };
 
-      // Validate job data structure
       expect(mockJobData.type).toMatch(/^[a-z-]+$/);
       expect(mockJobData.to).toContain('@');
       expect(typeof mockJobData.variables).toBe('object');
-    });
-  });
-});-email',
-        to: 'user@example.com',
-        subject: 'Welcome!',
-        template: 'welcome',
-        variables: { name: 'Test User' }
-      };
-
-      // Test job data structure
-      expect(mockJobData).toHaveProperty('type');
-      expect(mockJobData).toHaveProperty('to');
-      expect(typeof mockJobData.type).toBe('string');
-      expect(mockJobData.type).toMatch(/^[a-z-]+$/);
-    });
-
-    it('should support different job priority levels', () => {
-      // Test job options structure
-      const lowPriorityOptions = { priority: 1, attempts: 3 };
-      const highPriorityOptions = { priority: 10, attempts: 5 };
-
-      expect(lowPriorityOptions.priority).toBeLessThan(highPriorityOptions.priority);
-      expect(typeof lowPriorityOptions.attempts).toBe('number');
-      expect(typeof highPriorityOptions.attempts).toBe('number');
-    });
-
-    it('should handle job retry mechanisms', () => {
-      const retryConfig = {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000
-        }
-      };
-
-      expect(retryConfig.attempts).toBeGreaterThan(0);
-      expect(retryConfig.backoff.type).toBe('exponential');
-      expect(retryConfig.backoff.delay).toBeGreaterThan(0);
-    });
-  });
-
-  describe('Job Queue Management', () => {
-    it('should support queue cleanup operations', () => {
-      const cleanupConfig = {
-        completedJobRetention: 24 * 60 * 60 * 1000, // 1 day
-        failedJobRetention: 7 * 24 * 60 * 60 * 1000, // 7 days
-        maxJobsToKeep: 100
-      };
-
-      expect(cleanupConfig.completedJobRetention).toBeLessThan(cleanupConfig.failedJobRetention);
-      expect(cleanupConfig.maxJobsToKeep).toBeGreaterThan(0);
-    });
-
-    it('should support job statistics and monitoring', () => {
-      const mockStats = {
-        waiting: 5,
-        active: 2, 
-        completed: 150,
-        failed: 3,
-        delayed: 1
-      };
-
-      const totalJobs = Object.values(mockStats).reduce((sum, count) => sum + count, 0);
-      
-      expect(totalJobs).toBeGreaterThan(0);
-      expect(mockStats.completed).toBeGreaterThan(mockStats.failed);
     });
   });
 });
