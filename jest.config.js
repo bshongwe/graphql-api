@@ -26,4 +26,6 @@ export default {
   testTimeout: 30000,
   moduleDirectories: ['node_modules', '<rootDir>'],
   roots: ['<rootDir>/src', '<rootDir>/tests'],
+  forceExit: true,
+  detectOpenHandles: true,
 };

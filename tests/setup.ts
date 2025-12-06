@@ -9,6 +9,8 @@ beforeAll(() => {
   // Global setup before all tests
 });
 
-afterAll(() => {
+afterAll(async () => {
   // Global cleanup after all tests
+  // Force close any remaining handles
+  await new Promise(resolve => setTimeout(resolve, 100));
 });
