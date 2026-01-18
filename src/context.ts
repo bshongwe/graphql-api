@@ -23,15 +23,18 @@ interface CreateContextParams {
   req?: any;
 }
 
-export async function createContext({ req }: CreateContextParams = {}): Promise<Context> {
-  // Create repository and services with proper dependency injection using centralized prisma client
+export async function createContext({
+  req,
+}: CreateContextParams = {}): Promise<Context> {
+  // Create repository and services with proper dependency injection
+  // using centralized prisma client
   const userRepository = new UserRepository(prisma);
   const userService = new UserService(userRepository);
   const authService = new AuthService(userService);
-  
+
   // Create DataLoaders for this request (prevents N+1 queries)
   const loaders = createLoaders();
-  
+
   // Extract token from Authorization header
   let currentUser: User | null = null;
   if (req?.headers?.authorization) {

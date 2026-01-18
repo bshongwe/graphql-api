@@ -78,10 +78,11 @@ export const subscriptionHandlers = {
    */
   onConnect: async (connectionParams: any, _webSocket: any, _context: any) => {
     logger.info({ connectionParams }, 'WebSocket connection established');
-    
+
     // Optional: Extract auth token from connection params
-    const token = connectionParams?.Authorization || connectionParams?.authorization;
-    
+    const token =
+      connectionParams?.Authorization || connectionParams?.authorization;
+
     if (token) {
       try {
         // Validate JWT token - for now accept all tokens
@@ -93,7 +94,7 @@ export const subscriptionHandlers = {
         throw new Error('Authentication failed');
       }
     }
-    
+
     return { isAuthenticated: false };
   },
 
@@ -108,11 +109,14 @@ export const subscriptionHandlers = {
    * Handle subscription start
    */
   onOperationStart: async (_message: any, params: any, _webSocket: any) => {
-    logger.info({ 
-      operationName: params.operationName,
-      query: params.query.replaceAll(/\s+/g, ' ').trim()
-    }, 'Subscription operation started');
-    
+    logger.info(
+      {
+        operationName: params.operationName,
+        query: params.query.replaceAll(/\s+/g, ' ').trim(),
+      },
+      'Subscription operation started'
+    );
+
     return params;
   },
 

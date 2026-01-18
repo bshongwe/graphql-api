@@ -1,4 +1,4 @@
-export type Role = "USER" | "ADMIN";
+export type Role = 'USER' | 'ADMIN';
 
 export class User {
   constructor(
@@ -6,11 +6,17 @@ export class User {
     public name: string,
     public email: string,
     public password: string,
-    public role: Role = "USER"
+    public role: Role = 'USER'
   ) {}
 
   static fromPrisma(row: any): User {
-    return new User(row.id, row.name, row.email, row.password, row.role as Role);
+    return new User(
+      row.id,
+      row.name,
+      row.email,
+      row.password,
+      row.role as Role
+    );
   }
 
   // Method to return user without password for API responses
@@ -25,7 +31,7 @@ export class User {
 
   // Method to check if user is admin
   isAdmin(): boolean {
-    return this.role === "ADMIN";
+    return this.role === 'ADMIN';
   }
 
   // Method to validate email format

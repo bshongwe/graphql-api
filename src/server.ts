@@ -1,35 +1,44 @@
-import "reflect-metadata";
-import express from "express";
-import helmet from "helmet";
-import cors from "cors";
-import { ApolloServer } from "@apollo/server";
-import { startStandaloneServer } from "@apollo/server/standalone";
-import { readFileSync } from "node:fs";
-import { buildSubgraphSchema } from "@apollo/subgraph";
-import { parse } from "graphql";
-import { collectDefaultMetrics, register } from "prom-client";
-import { logger } from "./infrastructure/logger.js";
-import { createContext } from "./context.js";
-import { resolvers } from "./graphql/resolvers/index.js";
-import { AppError } from "./utils/errorHandler.js";
-import { initializePubSub, closePubSub } from "./infrastructure/pubsub.js";
-import { initializeJobQueues, closeJobQueues } from "./infrastructure/jobQueue.js";
-import { startJobWorkers, stopJobWorkers } from "./infrastructure/jobWorkers.js";
-import { createJobDashboard, dashboardAuthMiddleware } from "./infrastructure/jobDashboard.js";
+import 'reflect-metadata';
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { readFileSync } from 'node:fs';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import { parse } from 'graphql';
+import { collectDefaultMetrics, register } from 'prom-client';
+import { logger } from './infrastructure/logger.js';
+import { createContext } from './context.js';
+import { resolvers } from './graphql/resolvers/index.js';
+import { AppError } from './utils/errorHandler.js';
+import { initializePubSub, closePubSub } from './infrastructure/pubsub.js';
+import {
+  initializeJobQueues,
+  closeJobQueues,
+} from './infrastructure/jobQueue.js';
+import {
+  startJobWorkers,
+  stopJobWorkers,
+} from './infrastructure/jobWorkers.js';
+import {
+  createJobDashboard,
+  dashboardAuthMiddleware,
+} from './infrastructure/jobDashboard.js';
 
 // Load environment variables
-import "dotenv/config";
+import 'dotenv/config';
 
 // Validate required environment variables
 function validateEnvironment() {
   const required = ['DATABASE_URL', 'JWT_SECRET'];
   const missing = required.filter(key => !process.env[key]);
-  
+
   if (missing.length > 0) {
     logger.error({ missing }, 'Missing required environment variables');
     process.exit(1);
   }
-  
+
   if (process.env.JWT_SECRET === '<CHANGE-THIS-IN-PRODUCTION>') {
     logger.error('JWT_SECRET must be changed from default value');
     process.exit(1);
@@ -39,16 +48,19 @@ function validateEnvironment() {
 async function bootstrap() {
   // Validate environment first
   validateEnvironment();
-  
+
   // Initialize metrics collection
   collectDefaultMetrics();
-  
+
   // Initialize Redis PubSub for subscriptions
   try {
     await initializePubSub();
     logger.info('Redis PubSub initialized for subscriptions');
   } catch (error) {
-    logger.warn(error, 'Redis PubSub initialization failed, subscriptions may not work');
+    logger.warn(
+      error,
+      'Redis PubSub initialization failed, subscriptions may not work'
+    );
   }
 
   // Initialize job queues and workers
@@ -57,7 +69,10 @@ async function bootstrap() {
     await startJobWorkers();
     logger.info('Job queues and workers initialized');
   } catch (error) {
-    logger.warn(error, 'Job queue initialization failed, background jobs may not work');
+    logger.warn(
+      error,
+      'Job queue initialization failed, background jobs may not work'
+    );
   }
 
   // Load GraphQL schema
@@ -68,8 +83,8 @@ async function bootstrap() {
     schema: buildSubgraphSchema([{ typeDefs: parse(typeDefs), resolvers }]),
     formatError: (err: any) => {
       // Central error mapping; keep messages safe for clients
-      logger.error({ err }, "GraphQL error");
-      
+      logger.error({ err }, 'GraphQL error');
+
       // Extract AppError details if available
       const originalError = err.originalError;
       if (originalError instanceof AppError) {
@@ -83,7 +98,7 @@ async function bootstrap() {
           },
         };
       }
-      
+
       return {
         message: err.message,
         code: err.extensions?.code,
@@ -104,23 +119,25 @@ async function bootstrap() {
 
   // Setup separate Express app for metrics and health endpoints
   const metricsApp = express();
-  
+
   // Security middleware
   metricsApp.use(helmet());
-  metricsApp.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-    credentials: true
-  }));
-  
+  metricsApp.use(
+    cors({
+      origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+      credentials: true,
+    })
+  );
+
   // Metrics endpoint
-  metricsApp.get("/metrics", async (_req, res) => {
-    res.set("Content-Type", register.contentType);
+  metricsApp.get('/metrics', async (_req, res) => {
+    res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
   });
 
   // Health check endpoint
-  metricsApp.get("/health", (_req, res) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  metricsApp.get('/health', (_req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
   // Job dashboard (with basic auth)
@@ -134,8 +151,12 @@ async function bootstrap() {
 
   const metricsPort = Number(port) + 1;
   metricsApp.listen(metricsPort, () => {
-    logger.info(`📊 Metrics available at http://localhost:${metricsPort}/metrics`);
-    logger.info(`❤️ Health check available at http://localhost:${metricsPort}/health`);
+    logger.info(
+      `📊 Metrics available at http://localhost:${metricsPort}/metrics`
+    );
+    logger.info(
+      `❤️ Health check available at http://localhost:${metricsPort}/health`
+    );
   });
 
   // Graceful shutdown
@@ -143,7 +164,7 @@ async function bootstrap() {
     logger.info('SIGINT signal received: closing servers');
     await server.stop();
     logger.info('Apollo server stopped');
-    
+
     try {
       await closePubSub();
       logger.info('Redis PubSub closed');
@@ -158,7 +179,7 @@ async function bootstrap() {
     } catch (error) {
       logger.error(error, 'Error closing job queues');
     }
-    
+
     process.exit(0);
   });
 }
@@ -166,6 +187,6 @@ async function bootstrap() {
 try {
   await bootstrap();
 } catch (e) {
-  logger.error({ err: e }, "Failed to start server");
+  logger.error({ err: e }, 'Failed to start server');
   process.exit(1);
 }

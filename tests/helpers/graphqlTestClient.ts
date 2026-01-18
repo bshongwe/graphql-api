@@ -17,7 +17,7 @@ export class GraphQLTestClient {
 
   private async setupServer() {
     const typeDefs = readFileSync('./src/graphql/schema.graphql', 'utf8');
-    
+
     this.server = new ApolloServer({
       schema: makeExecutableSchema({ typeDefs, resolvers }),
       formatError: (err: any) => ({
@@ -39,12 +39,12 @@ export class GraphQLTestClient {
    * Execute GraphQL query
    */
   async query(
-    query: string, 
-    variables?: Record<string, any>, 
+    query: string,
+    variables?: Record<string, any>,
     headers?: Record<string, string>
   ) {
     await this.setupServer(); // Ensure server is ready
-    
+
     const response = await request(this.url!)
       .post('/')
       .set(headers || {})
@@ -57,8 +57,8 @@ export class GraphQLTestClient {
    * Execute GraphQL mutation
    */
   async mutate(
-    mutation: string, 
-    variables?: Record<string, any>, 
+    mutation: string,
+    variables?: Record<string, any>,
     headers?: Record<string, string>
   ) {
     return this.query(mutation, variables, headers);
@@ -68,8 +68,8 @@ export class GraphQLTestClient {
    * Execute authenticated query
    */
   async authenticatedQuery(
-    query: string, 
-    token: string, 
+    query: string,
+    token: string,
     variables?: Record<string, any>
   ) {
     return this.query(query, variables, { Authorization: `Bearer ${token}` });
@@ -79,11 +79,13 @@ export class GraphQLTestClient {
    * Execute authenticated mutation
    */
   async authenticatedMutation(
-    mutation: string, 
-    token: string, 
+    mutation: string,
+    token: string,
     variables?: Record<string, any>
   ) {
-    return this.mutate(mutation, variables, { Authorization: `Bearer ${token}` });
+    return this.mutate(mutation, variables, {
+      Authorization: `Bearer ${token}`,
+    });
   }
 
   /**
@@ -108,7 +110,7 @@ export const testQueries = {
       }
     }
   `,
-  
+
   USERS: `
     query Users {
       users {
@@ -135,7 +137,7 @@ export const testMutations = {
       }
     }
   `,
-  
+
   SIGN_IN: `
     mutation SignIn($email: String!, $password: String!) {
       signIn(email: $email, password: $password) {

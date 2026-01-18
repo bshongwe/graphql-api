@@ -18,12 +18,14 @@ export class TestDataFactory {
   /**
    * Generate a test user
    */
-  static generateUser(overrides: Partial<{
-    name: string;
-    email: string;
-    password: string;
-    role: string;
-  }> = {}) {
+  static generateUser(
+    overrides: Partial<{
+      name: string;
+      email: string;
+      password: string;
+      role: string;
+    }> = {}
+  ) {
     return {
       name: `Test User ${nanoid(4)}`,
       email: this.generateEmail(),
@@ -36,10 +38,12 @@ export class TestDataFactory {
   /**
    * Create a test user in database
    */
-  static async createUser(overrides: Parameters<typeof this.generateUser>[0] = {}) {
+  static async createUser(
+    overrides: Parameters<typeof this.generateUser>[0] = {}
+  ) {
     const userData = this.generateUser(overrides);
     const hashedPassword = await bcrypt.hash(userData.password, 12);
-    
+
     return this.prisma.user.create({
       data: {
         ...userData,
@@ -51,7 +55,10 @@ export class TestDataFactory {
   /**
    * Create multiple test users
    */
-  static async createUsers(count: number, overrides: Parameters<typeof this.generateUser>[0] = {}) {
+  static async createUsers(
+    count: number,
+    overrides: Parameters<typeof this.generateUser>[0] = {}
+  ) {
     const users = [];
     for (let i = 0; i < count; i++) {
       const user = await this.createUser(overrides);
@@ -64,20 +71,18 @@ export class TestDataFactory {
    * Generate JWT token for user
    */
   static generateToken(userId: number, email: string): string {
-    return jwt.sign(
-      { userId, email },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '7d' });
   }
 
   /**
    * Create authenticated user with token
    */
-  static async createAuthenticatedUser(overrides: Parameters<typeof this.generateUser>[0] = {}) {
+  static async createAuthenticatedUser(
+    overrides: Parameters<typeof this.generateUser>[0] = {}
+  ) {
     const user = await this.createUser(overrides);
     const token = this.generateToken(user.id, user.email);
-    
+
     return {
       user,
       token,

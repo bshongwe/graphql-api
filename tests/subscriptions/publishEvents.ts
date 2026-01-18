@@ -1,4 +1,8 @@
-import { UserEventPublisher, initializePubSub, closePubSub } from '../../src/infrastructure/pubsub.js';
+import {
+  UserEventPublisher,
+  initializePubSub,
+  closePubSub,
+} from '../../src/infrastructure/pubsub.js';
 
 /**
  * Test script to manually trigger subscription events
@@ -50,21 +54,23 @@ async function testUserSubscriptionEvents() {
     });
 
     console.log('\n✅ All subscription events published successfully!');
-    console.log('💡 If subscriptions are active, these events should be received by subscribers.\n');
+    console.log(
+      '💡 If subscriptions are active, these events should be ' +
+        'received by subscribers.\n'
+    );
 
     // Close Redis connections
     await closePubSub();
     console.log('🔌 Redis PubSub connections closed');
-
   } catch (error) {
     console.error('💥 Failed to publish subscription events:', error);
-    
+
     try {
       await closePubSub();
     } catch (closeError) {
       console.error('💥 Failed to close Redis connections:', closeError);
     }
-    
+
     process.exit(1);
   }
 }

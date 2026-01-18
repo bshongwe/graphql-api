@@ -5,7 +5,20 @@ export interface UserRepositoryInterface {
   findById(id: number): Promise<User | null>;
   findByIds(ids: number[]): Promise<User[]>;
   findByEmail(email: string): Promise<User | null>;
-  create(userData: { name: string; email: string; password: string; role?: string }): Promise<User>;
-  update(id: number, userData: Partial<{ name: string; email: string; password: string; role: string }>): Promise<User>;
+  create(userData: {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+  }): Promise<User>;
+  update(
+    id: number,
+    userData: Partial<{
+      name: string;
+      email: string;
+      password: string;
+      role: string;
+    }>
+  ): Promise<User>;
   delete(id: number): Promise<void>;
 }

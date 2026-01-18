@@ -13,7 +13,7 @@ describe('Helper Utilities', () => {
     test('should check if date is in the past', () => {
       const pastDate = new Date('2020-01-01');
       const futureDate = new Date('2030-01-01');
-      
+
       expect(DateUtils.isPast(pastDate)).toBe(true);
       expect(DateUtils.isPast(futureDate)).toBe(false);
     });
@@ -21,7 +21,7 @@ describe('Helper Utilities', () => {
     test('should get day bounds', () => {
       const date = new Date('2023-12-05T15:30:00Z');
       const bounds = DateUtils.getDayBounds(date);
-      
+
       expect(bounds.start.getHours()).toBe(0);
       expect(bounds.end.getHours()).toBe(23);
     });
@@ -47,7 +47,7 @@ describe('Helper Utilities', () => {
     test('should validate pagination params', () => {
       const validParams = { page: 1, limit: 20 };
       const result = ValidationUtils.validatePagination(validParams);
-      
+
       expect(result.page).toBe(1);
       expect(result.limit).toBe(20);
       expect(result.sortOrder).toBe('asc');
@@ -69,7 +69,7 @@ describe('Helper Utilities', () => {
     test('should create pagination result', () => {
       const data = [1, 2, 3, 4, 5];
       const result = PaginationUtils.createResult(data, 1, 5, 100);
-      
+
       expect(result.data).toEqual(data);
       expect(result.pagination.page).toBe(1);
       expect(result.pagination.limit).toBe(5);
@@ -80,10 +80,16 @@ describe('Helper Utilities', () => {
     });
 
     test('should validate pagination params', () => {
-      expect(() => PaginationUtils.validateParams(0, 20)).toThrow('Page must be at least 1');
-      expect(() => PaginationUtils.validateParams(1, 0)).toThrow('Limit must be between 1 and 100');
-      expect(() => PaginationUtils.validateParams(1, 101)).toThrow('Limit must be between 1 and 100');
-      
+      expect(() => PaginationUtils.validateParams(0, 20)).toThrow(
+        'Page must be at least 1'
+      );
+      expect(() => PaginationUtils.validateParams(1, 0)).toThrow(
+        'Limit must be between 1 and 100'
+      );
+      expect(() => PaginationUtils.validateParams(1, 101)).toThrow(
+        'Limit must be between 1 and 100'
+      );
+
       // Should not throw for valid params
       expect(() => PaginationUtils.validateParams(1, 20)).not.toThrow();
     });

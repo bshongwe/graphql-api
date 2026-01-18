@@ -17,11 +17,8 @@ const __dirname = dirname(__filename);
  * Create GraphQL schema for subscriptions
  */
 function createSubscriptionSchema() {
-  const typeDefs = readFileSync(
-    join(__dirname, '../schema.graphql'),
-    'utf8'
-  );
-  
+  const typeDefs = readFileSync(join(__dirname, '../schema.graphql'), 'utf8');
+
   return buildSubgraphSchema({ typeDefs, resolvers });
 }
 
@@ -38,52 +35,69 @@ export async function createWebSocketServer(httpServer: any) {
   const schema = createSubscriptionSchema();
 
   // Configure GraphQL WebSocket server
-  const serverCleanup = useServer({
-    schema,
-    context: async (ctx, msg, args) => {
-      // Create context similar to HTTP context but for WebSocket connections
-      return createContext({ req: ctx.extra.request });
-    },
-    
-    // Connection lifecycle handlers
-    onConnect: subscriptionHandlers.onConnect,
-    onDisconnect: subscriptionHandlers.onDisconnect,
-    
-    // Operation lifecycle handlers
-    onSubscribe: async (ctx, msg) => {
-      logger.info({ 
-        operationName: msg.payload.operationName,
-        connectionParams: ctx.connectionParams 
-      }, 'WebSocket subscription started');
-      
-      return subscriptionHandlers.onOperationStart?.(msg, msg.payload, ctx);
-    },
-    
-    onComplete: async (ctx, msg) => {
-      logger.info({ 
-        operationId: msg.id 
-      }, 'WebSocket subscription completed');
-      
-      return subscriptionHandlers.onOperationComplete?.(ctx, msg.id);
-    },
+  const serverCleanup = useServer(
+    {
+      schema,
+      context: async (ctx, msg, args) => {
+        // Create context similar to HTTP context but for WebSocket connections
+        return createContext({ req: ctx.extra.request });
+      },
 
-    onNext: async (ctx, msg, args, result) => {
-      logger.debug({ 
-        operationId: msg.id,
-        dataKeys: result.data ? Object.keys(result.data) : []
-      }, 'WebSocket subscription data sent');
+      // Connection lifecycle handlers
+      onConnect: subscriptionHandlers.onConnect,
+      onDisconnect: subscriptionHandlers.onDisconnect,
+
+      // Operation lifecycle handlers
+      onSubscribe: async (ctx, msg) => {
+        logger.info(
+          {
+            operationName: msg.payload.operationName,
+            connectionParams: ctx.connectionParams,
+          },
+          'WebSocket subscription started'
+        );
+
+        return subscriptionHandlers.onOperationStart?.(msg, msg.payload, ctx);
+      },
+
+      onComplete: async (ctx, msg) => {
+        logger.info(
+          {
+            operationId: msg.id,
+          },
+          'WebSocket subscription completed'
+        );
+
+        return subscriptionHandlers.onOperationComplete?.(ctx, msg.id);
+      },
+
+      onNext: async (ctx, msg, args, result) => {
+        logger.debug(
+          {
+            operationId: msg.id,
+            dataKeys: result.data ? Object.keys(result.data) : [],
+          },
+          'WebSocket subscription data sent'
+        );
+      },
+
+      onError: async (ctx, msg, errors) => {
+        logger.error(
+          {
+            operationId: msg.id,
+            errors: errors.map(e => ({ message: e.message, path: e.path })),
+          },
+          'WebSocket subscription error'
+        );
+      },
     },
+    wsServer
+  );
 
-    onError: async (ctx, msg, errors) => {
-      logger.error({ 
-        operationId: msg.id,
-        errors: errors.map(e => ({ message: e.message, path: e.path }))
-      }, 'WebSocket subscription error');
-    },
-
-  }, wsServer);
-
-  logger.info('WebSocket server configured for GraphQL subscriptions at /graphql/subscriptions');
+  logger.info(
+    'WebSocket server configured for GraphQL subscriptions ' +
+      'at /graphql/subscriptions'
+  );
 
   return {
     wsServer,
@@ -94,19 +108,22 @@ export async function createWebSocketServer(httpServer: any) {
 /**
  * Gracefully shutdown WebSocket server
  */
-export async function closeWebSocketServer(wsServer: WebSocketServer, cleanup: () => void) {
+export async function closeWebSocketServer(
+  wsServer: WebSocketServer,
+  cleanup: () => void
+) {
   logger.info('Shutting down WebSocket server');
-  
+
   // Stop accepting new connections
   cleanup();
-  
+
   // Close existing connections
-  wsServer.clients.forEach((socket) => {
+  wsServer.clients.forEach(socket => {
     socket.terminate();
   });
-  
+
   // Close the server
   wsServer.close();
-  
+
   logger.info('WebSocket server shutdown complete');
 }

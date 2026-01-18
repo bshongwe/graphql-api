@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { pubSub, SUBSCRIPTION_TOPICS, UserEventPublisher } from '../../src/infrastructure/pubsub.js';
+import {
+  pubSub,
+  SUBSCRIPTION_TOPICS,
+  UserEventPublisher,
+} from '../../src/infrastructure/pubsub.js';
 import { logger } from '../../src/infrastructure/logger.js';
 
 /**
@@ -79,8 +83,12 @@ describe('GraphQL Subscriptions', () => {
       );
 
       expect(receivedEvents).toHaveLength(1);
-      expect(receivedEvents[0].payload.userUpdated.user.name).toBe('John Smith');
-      expect(receivedEvents[0].payload.userUpdated.previousValues.name).toBe('John Doe');
+      expect(receivedEvents[0].payload.userUpdated.user.name).toBe(
+        'John Smith'
+      );
+      expect(receivedEvents[0].payload.userUpdated.previousValues.name).toBe(
+        'John Doe'
+      );
 
       pubSub.publish = originalPublish;
     });
@@ -142,7 +150,7 @@ describe('GraphQL Subscriptions', () => {
     it('should handle publishing errors gracefully', async () => {
       const originalPublish = pubSub.publish;
       const mockError = new Error('Redis connection failed');
-      
+
       pubSub.publish = jest.fn().mockRejectedValue(mockError);
 
       // Mock logger to capture error logs
@@ -153,8 +161,10 @@ describe('GraphQL Subscriptions', () => {
       });
 
       // Should not throw error, but should log it
-      await expect(UserEventPublisher.publishUserCreated(mockUser)).resolves.toBeUndefined();
-      
+      await expect(
+        UserEventPublisher.publishUserCreated(mockUser)
+      ).resolves.toBeUndefined();
+
       expect(loggerErrors).toHaveLength(1);
       expect(loggerErrors[0][0]).toBe(mockError);
 
@@ -183,7 +193,10 @@ describe('GraphQL Subscriptions', () => {
 
       await UserEventPublisher.publishUserCreated(mockUser);
       await UserEventPublisher.publishUserUpdated(mockUser, null);
-      await UserEventPublisher.publishUserDeleted({ id: '1', email: 'test@test.com' });
+      await UserEventPublisher.publishUserDeleted({
+        id: '1',
+        email: 'test@test.com',
+      });
       await UserEventPublisher.publishUserOnline(mockUser, true);
 
       expect(receivedEvents).toHaveLength(4);
@@ -191,7 +204,7 @@ describe('GraphQL Subscriptions', () => {
       for (const event of receivedEvents) {
         const payloadKey = Object.keys(event.payload)[0];
         const payload = event.payload[payloadKey];
-        
+
         expect(payload).toHaveProperty('timestamp');
         expect(typeof payload.timestamp).toBe('string');
         expect(new Date(payload.timestamp)).toBeInstanceOf(Date);

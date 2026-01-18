@@ -44,9 +44,13 @@ export class PaginationUtils {
   /**
    * Create pagination metadata
    */
-  static createMeta(page: number, limit: number, total: number): PaginationMeta {
+  static createMeta(
+    page: number,
+    limit: number,
+    total: number
+  ): PaginationMeta {
     const totalPages = this.calculateTotalPages(total, limit);
-    
+
     return {
       page,
       limit,
@@ -61,9 +65,9 @@ export class PaginationUtils {
    * Create paginated result
    */
   static createResult<T>(
-    data: T[], 
-    page: number, 
-    limit: number, 
+    data: T[],
+    page: number,
+    limit: number,
     total: number
   ): PaginationResult<T> {
     return {

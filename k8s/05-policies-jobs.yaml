@@ -19,24 +19,24 @@ metadata:
   namespace: graphql-api
 spec:
   limits:
-  - default:
-      memory: "2Gi"
-      cpu: "1"
-      ephemeral-storage: "5Gi"
-    defaultRequest:
-      memory: "512Mi"
-      cpu: "250m"
-      ephemeral-storage: "1Gi"
-    type: Container
-  - max:
-      memory: "8Gi"
-      cpu: "4"
-      ephemeral-storage: "20Gi"
-    min:
-      memory: "128Mi"
-      cpu: "50m"
-      ephemeral-storage: "500Mi"
-    type: Container
+    - default:
+        memory: '2Gi'
+        cpu: '1'
+        ephemeral-storage: '5Gi'
+      defaultRequest:
+        memory: '512Mi'
+        cpu: '250m'
+        ephemeral-storage: '1Gi'
+      type: Container
+    - max:
+        memory: '8Gi'
+        cpu: '4'
+        ephemeral-storage: '20Gi'
+      min:
+        memory: '128Mi'
+        cpu: '50m'
+        ephemeral-storage: '500Mi'
+      type: Container
 ---
 apiVersion: v1
 kind: ResourceQuota
@@ -45,16 +45,16 @@ metadata:
   namespace: graphql-api
 spec:
   hard:
-    requests.cpu: "10"
-    requests.memory: "20Gi"
-    requests.storage: "50Gi"
-    limits.cpu: "20"
-    limits.memory: "40Gi"
-    persistentvolumeclaims: "5"
-    pods: "50"
-    services: "10"
-    secrets: "10"
-    configmaps: "10"
+    requests.cpu: '10'
+    requests.memory: '20Gi'
+    requests.storage: '50Gi'
+    limits.cpu: '20'
+    limits.memory: '40Gi'
+    persistentvolumeclaims: '5'
+    pods: '50'
+    services: '10'
+    secrets: '10'
+    configmaps: '10'
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -65,7 +65,7 @@ metadata:
     app: graphql-api
     component: backup
 spec:
-  schedule: "0 2 * * *"  # Daily at 2 AM
+  schedule: '0 2 * * *' # Daily at 2 AM
   jobTemplate:
     spec:
       template:
@@ -73,45 +73,45 @@ spec:
           serviceAccountName: graphql-api-sa
           automountServiceAccountToken: false
           containers:
-          - name: postgres-backup
-            image: postgres:15-alpine
-            command:
-            - /bin/bash
-            - -c
-            - |
-              pg_dump $DATABASE_URL | gzip > /backup/backup-$(date +%Y%m%d-%H%M%S).sql.gz
-              # Keep only last 7 days of backups
-              find /backup -name "backup-*.sql.gz" -mtime +7 -delete
-            env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: graphql-api-secrets
-                  key: DATABASE_URL
-            resources:
-              requests:
-                memory: "256Mi"
-                cpu: "100m"
-                ephemeral-storage: "1Gi"
-              limits:
-                memory: "1Gi"
-                cpu: "500m"
-                ephemeral-storage: "5Gi"
-            volumeMounts:
-            - name: backup-storage
-              mountPath: /backup
-            securityContext:
-              allowPrivilegeEscalation: false
-              runAsNonRoot: true
-              runAsUser: 999
-              readOnlyRootFilesystem: true
-              capabilities:
-                drop:
-                - ALL
+            - name: postgres-backup
+              image: postgres:15-alpine
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  pg_dump $DATABASE_URL | gzip > /backup/backup-$(date +%Y%m%d-%H%M%S).sql.gz
+                  # Keep only last 7 days of backups
+                  find /backup -name "backup-*.sql.gz" -mtime +7 -delete
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: graphql-api-secrets
+                      key: DATABASE_URL
+              resources:
+                requests:
+                  memory: '256Mi'
+                  cpu: '100m'
+                  ephemeral-storage: '1Gi'
+                limits:
+                  memory: '1Gi'
+                  cpu: '500m'
+                  ephemeral-storage: '5Gi'
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 999
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
           volumes:
-          - name: backup-storage
-            persistentVolumeClaim:
-              claimName: backup-pvc
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: backup-pvc
           restartPolicy: OnFailure
           securityContext:
             fsGroup: 999
@@ -140,15 +140,15 @@ metadata:
     app: graphql-api
     component: metrics
   annotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "9464"
-    prometheus.io/path: "/metrics"
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '9464'
+    prometheus.io/path: '/metrics'
 spec:
   selector:
     app: graphql-api
   ports:
-  - port: 9464
-    targetPort: 9464
-    protocol: TCP
-    name: metrics
+    - port: 9464
+      targetPort: 9464
+      protocol: TCP
+      name: metrics
   type: ClusterIP

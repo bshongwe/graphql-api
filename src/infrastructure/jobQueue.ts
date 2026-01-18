@@ -9,7 +9,8 @@ const redisConnection = {
   host: process.env.REDIS_HOST || 'localhost',
   port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
   ...(process.env.REDIS_PASSWORD && { password: process.env.REDIS_PASSWORD }),
-  db: Number.parseInt(process.env.REDIS_JOBS_DB || '1', 10), // Use DB 1 for jobs (DB 0 for PubSub)
+  // Use DB 1 for jobs (DB 0 for PubSub)
+  db: Number.parseInt(process.env.REDIS_JOBS_DB || '1', 10),
   maxRetriesPerRequest: null, // Required by BullMQ
   retryDelayOnFailover: 100,
   enableOfflineQueue: false,
@@ -53,8 +54,12 @@ export const JOB_TYPES = {
  */
 export const queues = {
   emailQueue: new Queue(JOB_QUEUES.EMAIL, { connection: redis }),
-  userProcessingQueue: new Queue(JOB_QUEUES.USER_PROCESSING, { connection: redis }),
-  notificationsQueue: new Queue(JOB_QUEUES.NOTIFICATIONS, { connection: redis }),
+  userProcessingQueue: new Queue(JOB_QUEUES.USER_PROCESSING, {
+    connection: redis,
+  }),
+  notificationsQueue: new Queue(JOB_QUEUES.NOTIFICATIONS, {
+    connection: redis,
+  }),
   dataExportQueue: new Queue(JOB_QUEUES.DATA_EXPORT, { connection: redis }),
 };
 
@@ -63,16 +68,24 @@ export const queues = {
  */
 export const queueEvents = {
   emailEvents: new QueueEvents(JOB_QUEUES.EMAIL, { connection: redis }),
-  userProcessingEvents: new QueueEvents(JOB_QUEUES.USER_PROCESSING, { connection: redis }),
-  notificationsEvents: new QueueEvents(JOB_QUEUES.NOTIFICATIONS, { connection: redis }),
-  dataExportEvents: new QueueEvents(JOB_QUEUES.DATA_EXPORT, { connection: redis }),
+  userProcessingEvents: new QueueEvents(JOB_QUEUES.USER_PROCESSING, {
+    connection: redis,
+  }),
+  notificationsEvents: new QueueEvents(JOB_QUEUES.NOTIFICATIONS, {
+    connection: redis,
+  }),
+  dataExportEvents: new QueueEvents(JOB_QUEUES.DATA_EXPORT, {
+    connection: redis,
+  }),
 };
 
 /**
  * Job data interfaces
  */
 export interface EmailJobData {
-  type: typeof JOB_TYPES.SEND_WELCOME_EMAIL | typeof JOB_TYPES.SEND_PASSWORD_RESET;
+  type:
+    | typeof JOB_TYPES.SEND_WELCOME_EMAIL
+    | typeof JOB_TYPES.SEND_PASSWORD_RESET;
   to: string;
   subject: string;
   template: string;
@@ -80,7 +93,9 @@ export interface EmailJobData {
 }
 
 export interface UserJobData {
-  type: typeof JOB_TYPES.PROCESS_USER_SIGNUP | typeof JOB_TYPES.PROCESS_USER_DELETION;
+  type:
+    | typeof JOB_TYPES.PROCESS_USER_SIGNUP
+    | typeof JOB_TYPES.PROCESS_USER_DELETION;
   userId: string;
   email: string;
   metadata?: Record<string, any>;
@@ -95,7 +110,9 @@ export interface NotificationJobData {
 }
 
 export interface DataExportJobData {
-  type: typeof JOB_TYPES.EXPORT_USER_DATA | typeof JOB_TYPES.CLEANUP_EXPIRED_TOKENS;
+  type:
+    | typeof JOB_TYPES.EXPORT_USER_DATA
+    | typeof JOB_TYPES.CLEANUP_EXPIRED_TOKENS;
   userId?: string;
   format?: 'json' | 'csv' | 'pdf';
   filters?: Record<string, any>;
@@ -122,7 +139,10 @@ export class JobService {
         ...options,
       });
 
-      logger.info({ jobId: job.id, type: data.type }, 'Email job added to queue');
+      logger.info(
+        { jobId: job.id, type: data.type },
+        'Email job added to queue'
+      );
       return job;
     } catch (error) {
       logger.error(error, 'Failed to add email job to queue');
@@ -146,7 +166,10 @@ export class JobService {
         ...options,
       });
 
-      logger.info({ jobId: job.id, type: data.type, userId: data.userId }, 'User processing job added to queue');
+      logger.info(
+        { jobId: job.id, type: data.type, userId: data.userId },
+        'User processing job added to queue'
+      );
       return job;
     } catch (error) {
       logger.error(error, 'Failed to add user processing job to queue');
@@ -157,7 +180,10 @@ export class JobService {
   /**
    * Add notification job to queue
    */
-  static async addNotificationJob(data: NotificationJobData, options: any = {}) {
+  static async addNotificationJob(
+    data: NotificationJobData,
+    options: any = {}
+  ) {
     try {
       const job = await queues.notificationsQueue.add(data.type, data, {
         attempts: options.attempts || 5,
@@ -170,7 +196,10 @@ export class JobService {
         ...options,
       });
 
-      logger.info({ jobId: job.id, userId: data.userId, channel: data.channel }, 'Notification job added to queue');
+      logger.info(
+        { jobId: job.id, userId: data.userId, channel: data.channel },
+        'Notification job added to queue'
+      );
       return job;
     } catch (error) {
       logger.error(error, 'Failed to add notification job to queue');
@@ -194,7 +223,10 @@ export class JobService {
         ...options,
       });
 
-      logger.info({ jobId: job.id, type: data.type }, 'Data export job added to queue');
+      logger.info(
+        { jobId: job.id, type: data.type },
+        'Data export job added to queue'
+      );
       return job;
     } catch (error) {
       logger.error(error, 'Failed to add data export job to queue');
@@ -208,15 +240,17 @@ export class JobService {
   static async getQueueStats() {
     try {
       const stats: Record<string, any> = {};
-      
+
       for (const [name, queue] of Object.entries(queues)) {
-        const [waiting, active, completed, failed, delayed] = await Promise.all([
-          queue.getWaiting(),
-          queue.getActive(),
-          queue.getCompleted(),
-          queue.getFailed(),
-          queue.getDelayed(),
-        ]);
+        const [waiting, active, completed, failed, delayed] = await Promise.all(
+          [
+            queue.getWaiting(),
+            queue.getActive(),
+            queue.getCompleted(),
+            queue.getFailed(),
+            queue.getDelayed(),
+          ]
+        );
 
         stats[name] = {
           waiting: waiting.length,
@@ -240,13 +274,15 @@ export class JobService {
   static async cleanupQueues() {
     try {
       const results = [];
-      
+
       for (const [name, queue] of Object.entries(queues)) {
         const [cleanedCompleted, cleanedFailed] = await Promise.all([
-          queue.clean(24 * 60 * 60 * 1000, 50, 'completed'), // Clean completed jobs older than 1 day
-          queue.clean(7 * 24 * 60 * 60 * 1000, 20, 'failed'), // Clean failed jobs older than 7 days
+          // Clean completed jobs older than 1 day
+          queue.clean(24 * 60 * 60 * 1000, 50, 'completed'),
+          // Clean failed jobs older than 7 days
+          queue.clean(7 * 24 * 60 * 60 * 1000, 20, 'failed'),
         ]);
-        
+
         results.push({ queue: name, cleanedCompleted, cleanedFailed });
       }
 
@@ -265,22 +301,22 @@ export class JobService {
 export async function initializeJobQueues(): Promise<void> {
   try {
     // Setup Redis error handling
-    redis.on('error', (error) => {
+    redis.on('error', error => {
       logger.error(error, 'Redis connection error');
     });
-    
+
     redis.on('connect', () => {
       logger.info('Redis connected for job queues');
     });
-    
+
     redis.on('ready', () => {
       logger.info('Redis ready for job queues');
     });
-    
+
     redis.on('close', () => {
       logger.warn('Redis connection closed for job queues');
     });
-    
+
     // Test Redis connection
     await redis.ping();
     logger.info('Redis connection established for job queues');
@@ -296,7 +332,10 @@ export async function initializeJobQueues(): Promise<void> {
       });
 
       events.on('progress', ({ jobId, data }) => {
-        logger.debug({ jobId, progress: data, queue: name }, 'Job progress update');
+        logger.debug(
+          { jobId, progress: data, queue: name },
+          'Job progress update'
+        );
       });
 
       events.on('stalled', ({ jobId }) => {
@@ -318,13 +357,13 @@ export async function closeJobQueues(): Promise<void> {
   try {
     // Close all queues
     await Promise.all(Object.values(queues).map(queue => queue.close()));
-    
+
     // Close all queue events
     await Promise.all(Object.values(queueEvents).map(events => events.close()));
-    
+
     // Close Redis connection
     await redis.quit();
-    
+
     logger.info('Job queues closed successfully');
   } catch (error) {
     logger.error(error, 'Error closing job queues');

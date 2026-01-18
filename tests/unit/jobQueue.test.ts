@@ -2,20 +2,22 @@ import { describe, it, expect } from '@jest/globals';
 
 /**
  * Test suite for BullMQ job processing system
- * Note: These tests focus on configuration and constants to avoid Redis connection issues
+ * Note: These tests focus on configuration and constants
+ * to avoid Redis connection issues
  */
 describe('BullMQ Job Processing', () => {
   describe('Job Type Constants', () => {
     it('should define job type constants with correct format', () => {
-      // Test job type format without importing the module that creates Redis connections
+      // Test job type format without importing the module
+      // that creates Redis connections
       const expectedJobTypes = [
         'send-welcome-email',
-        'send-password-reset', 
+        'send-password-reset',
         'process-user-signup',
         'process-user-deletion',
         'send-notification',
         'export-user-data',
-        'cleanup-expired-tokens'
+        'cleanup-expired-tokens',
       ];
 
       for (const jobType of expectedJobTypes) {
@@ -29,8 +31,8 @@ describe('BullMQ Job Processing', () => {
       const expectedQueueNames = [
         'email-queue',
         'user-processing-queue',
-        'notifications-queue', 
-        'data-export-queue'
+        'notifications-queue',
+        'data-export-queue',
       ];
 
       for (const queueName of expectedQueueNames) {
@@ -71,9 +73,12 @@ describe('BullMQ Job Processing', () => {
       // Each queue type should handle specific job categories
       const queueJobMapping = {
         'email-queue': ['send-welcome-email', 'send-password-reset'],
-        'user-processing-queue': ['process-user-signup', 'process-user-deletion'], 
+        'user-processing-queue': [
+          'process-user-signup',
+          'process-user-deletion',
+        ],
         'notifications-queue': ['send-notification'],
-        'data-export-queue': ['export-user-data', 'cleanup-expired-tokens']
+        'data-export-queue': ['export-user-data', 'cleanup-expired-tokens'],
       };
 
       for (const [queueName, jobTypes] of Object.entries(queueJobMapping)) {
@@ -88,10 +93,10 @@ describe('BullMQ Job Processing', () => {
       // Email job data structure
       const emailJobStructure = {
         type: 'string',
-        to: 'string', 
+        to: 'string',
         subject: 'string',
         template: 'string',
-        variables: 'object'
+        variables: 'object',
       };
 
       for (const [field, type] of Object.entries(emailJobStructure)) {
@@ -100,12 +105,12 @@ describe('BullMQ Job Processing', () => {
         expect(['string', 'object', 'number'].includes(type)).toBe(true);
       }
 
-      // User job data structure  
+      // User job data structure
       const userJobStructure = {
         type: 'string',
         userId: 'string',
         email: 'string',
-        metadata: 'object'
+        metadata: 'object',
       };
 
       for (const [field, type] of Object.entries(userJobStructure)) {
@@ -118,10 +123,10 @@ describe('BullMQ Job Processing', () => {
       // BullMQ Redis configuration requirements
       const requiredRedisConfig = {
         host: 'string',
-        port: 'number', 
+        port: 'number',
         maxRetriesPerRequest: null, // Required by BullMQ
         retryDelayOnFailover: 'number',
-        enableOfflineQueue: 'boolean'
+        enableOfflineQueue: 'boolean',
       };
 
       expect(requiredRedisConfig.maxRetriesPerRequest).toBe(null);
@@ -135,8 +140,12 @@ describe('BullMQ Job Processing', () => {
       const jobPolicies = {
         emailJobs: { attempts: 3, removeOnComplete: 10, removeOnFail: 5 },
         userJobs: { attempts: 3, removeOnComplete: 20, removeOnFail: 10 },
-        notificationJobs: { attempts: 5, removeOnComplete: 15, removeOnFail: 8 },
-        dataJobs: { attempts: 2, removeOnComplete: 5, removeOnFail: 3 }
+        notificationJobs: {
+          attempts: 5,
+          removeOnComplete: 15,
+          removeOnFail: 8,
+        },
+        dataJobs: { attempts: 2, removeOnComplete: 5, removeOnFail: 3 },
       };
 
       for (const [, policy] of Object.entries(jobPolicies)) {
@@ -150,15 +159,15 @@ describe('BullMQ Job Processing', () => {
     it('should have appropriate concurrency limits', () => {
       const concurrencyLimits = {
         emailWorker: 5,
-        userProcessingWorker: 3, 
+        userProcessingWorker: 3,
         notificationsWorker: 8,
-        dataExportWorker: 2 // Heavy jobs should have lower concurrency
+        dataExportWorker: 2, // Heavy jobs should have lower concurrency
       };
 
       for (const [worker, limit] of Object.entries(concurrencyLimits)) {
         expect(limit).toBeGreaterThan(0);
         expect(limit).toBeLessThanOrEqual(10);
-        
+
         if (worker === 'dataExportWorker') {
           expect(limit).toBeLessThanOrEqual(3); // Heavy jobs
         }
@@ -168,15 +177,16 @@ describe('BullMQ Job Processing', () => {
     it('should have proper rate limiting', () => {
       const rateLimits = {
         email: { max: 10, duration: 60000 }, // 10 emails per minute
-        user: { max: 20, duration: 60000 }, // 20 user ops per minute  
-        notifications: { max: 50, duration: 60000 }, // 50 notifications per minute
-        dataExport: { max: 5, duration: 60000 } // 5 exports per minute
+        user: { max: 20, duration: 60000 }, // 20 user ops per minute
+        // 50 notifications per minute
+        notifications: { max: 50, duration: 60000 },
+        dataExport: { max: 5, duration: 60000 }, // 5 exports per minute
       };
 
       for (const [category, limit] of Object.entries(rateLimits)) {
         expect(limit.max).toBeGreaterThan(0);
         expect(limit.duration).toBe(60000); // 1 minute
-        
+
         if (category === 'dataExport') {
           expect(limit.max).toBeLessThanOrEqual(5); // Heavy operations
         }
@@ -191,7 +201,7 @@ describe('BullMQ Job Processing', () => {
         to: 'test@example.com',
         subject: 'Welcome',
         template: 'welcome',
-        variables: { name: 'Test User' }
+        variables: { name: 'Test User' },
       };
 
       expect(mockJobData.type).toMatch(/^[a-z-]+$/);

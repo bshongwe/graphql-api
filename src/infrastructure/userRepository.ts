@@ -14,7 +14,7 @@ export class UserRepository implements UserRepositoryInterface {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
-    
+
     return user ? User.fromPrisma(user) : null;
   }
 
@@ -22,11 +22,11 @@ export class UserRepository implements UserRepositoryInterface {
     const users = await this.prisma.user.findMany({
       where: {
         id: {
-          in: ids
-        }
-      }
+          in: ids,
+        },
+      },
     });
-    
+
     return users.map(user => User.fromPrisma(user));
   }
 
@@ -34,11 +34,16 @@ export class UserRepository implements UserRepositoryInterface {
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
-    
+
     return user ? User.fromPrisma(user) : null;
   }
 
-  async create(userData: { name: string; email: string; password: string; role?: string }): Promise<User> {
+  async create(userData: {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+  }): Promise<User> {
     const user = await this.prisma.user.create({
       data: {
         name: userData.name,
@@ -47,16 +52,24 @@ export class UserRepository implements UserRepositoryInterface {
         role: userData.role || 'USER',
       },
     });
-    
+
     return User.fromPrisma(user);
   }
 
-  async update(id: number, userData: Partial<{ name: string; email: string; password: string; role: string }>): Promise<User> {
+  async update(
+    id: number,
+    userData: Partial<{
+      name: string;
+      email: string;
+      password: string;
+      role: string;
+    }>
+  ): Promise<User> {
     const user = await this.prisma.user.update({
       where: { id },
       data: userData,
     });
-    
+
     return User.fromPrisma(user);
   }
 

@@ -1,4 +1,12 @@
-import { format, parseISO, isValid, addDays, subDays, startOfDay, endOfDay } from 'date-fns';
+import {
+  format,
+  parseISO,
+  isValid,
+  addDays,
+  subDays,
+  startOfDay,
+  endOfDay,
+} from 'date-fns';
 
 export class DateUtils {
   /**
@@ -22,7 +30,10 @@ export class DateUtils {
   /**
    * Format date for display
    */
-  static formatForDisplay(date: Date, formatString = 'yyyy-MM-dd HH:mm:ss'): string {
+  static formatForDisplay(
+    date: Date,
+    formatString = 'yyyy-MM-dd HH:mm:ss'
+  ): string {
     return format(date, formatString);
   }
 
@@ -32,12 +43,12 @@ export class DateUtils {
   static getDateRange(start: Date, end: Date): Date[] {
     const dates: Date[] = [];
     let currentDate = new Date(start);
-    
+
     while (currentDate <= end) {
       dates.push(new Date(currentDate));
       currentDate = addDays(currentDate, 1);
     }
-    
+
     return dates;
   }
 

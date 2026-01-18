@@ -16,7 +16,7 @@ const server = new ApolloServer({
   schema: buildSubgraphSchema([{ typeDefs: parse(typeDefs), resolvers }]),
   formatError: (err: any) => {
     console.error('GraphQL error:', err);
-    
+
     // Extract AppError details if available
     const originalError = err.originalError;
     if (originalError instanceof AppError) {
@@ -30,7 +30,7 @@ const server = new ApolloServer({
         },
       };
     }
-    
+
     return {
       message: err.message,
       code: err.extensions?.code,

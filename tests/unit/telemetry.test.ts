@@ -5,19 +5,19 @@ describe('OpenTelemetry Integration', () => {
     test('should create span and handle success', async () => {
       const result = await TracingUtils.withSpan(
         'test-span',
-        async (span) => {
+        async span => {
           expect(span).toBeDefined();
           return 'success';
         },
         { 'test.attribute': 'value' }
       );
-      
+
       expect(result).toBe('success');
     });
 
     test('should create span and handle error', async () => {
       const testError = new Error('Test error');
-      
+
       await expect(
         TracingUtils.withSpan('test-error-span', async () => {
           throw testError;
@@ -33,7 +33,7 @@ describe('OpenTelemetry Integration', () => {
           return { id: 1, name: 'Test User' };
         }
       );
-      
+
       expect(result).toEqual({ id: 1, name: 'Test User' });
     });
 

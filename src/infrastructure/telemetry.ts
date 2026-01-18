@@ -1,5 +1,7 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import {
+  getNodeAutoInstrumentations,
+} from '@opentelemetry/auto-instrumentations-node';
 import { ZipkinExporter } from '@opentelemetry/exporter-zipkin';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
 
@@ -14,7 +16,7 @@ const getTracingExporter = () => {
       url: process.env.ZIPKIN_URL,
     });
   }
-  
+
   // Default to console in development
   return new ConsoleSpanExporter();
 };
@@ -35,12 +37,13 @@ export const initializeTracing = () => {
   });
 
   sdk.start();
-  
+
   // Handle graceful shutdown
   process.on('SIGTERM', () => {
-    sdk.shutdown()
+    sdk
+      .shutdown()
       .then(() => console.log('OpenTelemetry terminated'))
-      .catch((error) => console.log('Error terminating OpenTelemetry', error))
+      .catch(error => console.log('Error terminating OpenTelemetry', error))
       .finally(() => process.exit(0));
   });
 
@@ -60,12 +63,12 @@ export class TracingUtils {
    * Create a custom span
    */
   static async withSpan<T>(
-    name: string, 
-    fn: (span: any) => Promise<T>, 
+    name: string,
+    fn: (span: any) => Promise<T>,
     attributes?: SpanAttributes
   ): Promise<T> {
     const spanOptions = attributes ? { attributes } : {};
-    return tracer.startActiveSpan(name, spanOptions, async (span) => {
+    return tracer.startActiveSpan(name, spanOptions, async span => {
       try {
         const result = await fn(span);
         span.setStatus({ code: SpanStatusCode.OK });
@@ -75,7 +78,9 @@ export class TracingUtils {
           code: SpanStatusCode.ERROR,
           message: error instanceof Error ? error.message : 'Unknown error',
         });
-        span.recordException(error instanceof Error ? error : new Error(String(error)));
+        span.recordException(
+          error instanceof Error ? error : new Error(String(error))
+        );
         throw error;
       } finally {
         span.end();
@@ -113,14 +118,10 @@ export class TracingUtils {
     table: string,
     fn: () => Promise<T>
   ): Promise<T> {
-    return this.withSpan(
-      `db.${operation}`,
-      fn,
-      {
-        'db.operation': operation,
-        'db.table': table,
-        'span.kind': SpanKind.CLIENT,
-      }
-    );
+    return this.withSpan(`db.${operation}`, fn, {
+      'db.operation': operation,
+      'db.table': table,
+      'span.kind': SpanKind.CLIENT,
+    });
   }
 }

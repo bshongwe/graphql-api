@@ -1,6 +1,10 @@
 import { User } from '../domain/user.js';
 import { UserRepositoryInterface } from '../domain/userRepositoryInterface.js';
-import { NotFoundError, ValidationError, ConflictError } from '../utils/errorHandler.js';
+import {
+  NotFoundError,
+  ValidationError,
+  ConflictError,
+} from '../utils/errorHandler.js';
 
 export class UserService {
   constructor(private readonly userRepository: UserRepositoryInterface) {}
@@ -11,7 +15,7 @@ export class UserService {
 
   async findById(id: number): Promise<User> {
     const user = await this.userRepository.findById(id);
-    
+
     if (!user) {
       throw new NotFoundError('User not found');
     }
@@ -23,9 +27,20 @@ export class UserService {
     return this.userRepository.findByEmail(email);
   }
 
-  async create(data: { name: string; email: string; password: string; role?: string }): Promise<User> {
+  async create(data: {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+  }): Promise<User> {
     // Validate email format
-    const tempUser = new User(null, data.name, data.email, data.password, data.role as any);
+    const tempUser = new User(
+      null,
+      data.name,
+      data.email,
+      data.password,
+      data.role as any
+    );
     if (!tempUser.isValidEmail()) {
       throw new ValidationError('Invalid email format');
     }
@@ -39,7 +54,15 @@ export class UserService {
     return this.userRepository.create(data);
   }
 
-  async update(id: number, data: Partial<{ name: string; email: string; password: string; role: string }>): Promise<User> {
+  async update(
+    id: number,
+    data: Partial<{
+      name: string;
+      email: string;
+      password: string;
+      role: string;
+    }>
+  ): Promise<User> {
     // Validate email format if email is being updated
     if (data.email) {
       const tempUser = new User(null, '', data.email, '', 'USER');

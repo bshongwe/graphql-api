@@ -77,16 +77,16 @@ const USER_DELETED_SUBSCRIPTION = gql`
  */
 async function testUserCreatedSubscription() {
   console.log('🔄 Starting UserCreated subscription test...');
-  
+
   const subscription = client.subscribe({
     query: USER_CREATED_SUBSCRIPTION,
   });
 
   const subscriptionObserver = subscription.subscribe({
-    next: (result) => {
+    next: result => {
       console.log('📨 UserCreated event received:', result);
     },
-    error: (err) => {
+    error: err => {
       console.error('❌ UserCreated subscription error:', err);
     },
     complete: () => {
@@ -99,17 +99,17 @@ async function testUserCreatedSubscription() {
 
 async function testUserUpdatedSubscription(userId?: string) {
   console.log('🔄 Starting UserUpdated subscription test...');
-  
+
   const subscription = client.subscribe({
     query: USER_UPDATED_SUBSCRIPTION,
     variables: { userId },
   });
 
   const subscriptionObserver = subscription.subscribe({
-    next: (result) => {
+    next: result => {
       console.log('📨 UserUpdated event received:', result);
     },
-    error: (err) => {
+    error: err => {
       console.error('❌ UserUpdated subscription error:', err);
     },
     complete: () => {
@@ -122,16 +122,16 @@ async function testUserUpdatedSubscription(userId?: string) {
 
 async function testUserDeletedSubscription() {
   console.log('🔄 Starting UserDeleted subscription test...');
-  
+
   const subscription = client.subscribe({
     query: USER_DELETED_SUBSCRIPTION,
   });
 
   const subscriptionObserver = subscription.subscribe({
-    next: (result) => {
+    next: result => {
       console.log('📨 UserDeleted event received:', result);
     },
-    error: (err) => {
+    error: err => {
       console.error('❌ UserDeleted subscription error:', err);
     },
     complete: () => {
@@ -155,16 +155,21 @@ async function runSubscriptionTests() {
     const userDeletedSub = await testUserDeletedSubscription();
 
     console.log('\n✅ All subscriptions started successfully!');
-    console.log('💡 Now perform mutations in another terminal to see subscription events:\n');
-    
+    console.log(
+      '💡 Now perform mutations in another terminal to see ' +
+        'subscription events:\n'
+    );
+
     console.log('Example mutations:');
     console.log('1. Sign up a new user to trigger userCreated');
-    console.log('2. Update user profile to trigger userUpdated'); 
+    console.log('2. Update user profile to trigger userUpdated');
     console.log('3. Delete a user (admin only) to trigger userDeleted\n');
 
     // Keep the process running to listen for events
-    console.log('⏳ Listening for subscription events... (Press Ctrl+C to stop)');
-    
+    console.log(
+      '⏳ Listening for subscription events... (Press Ctrl+C to stop)'
+    );
+
     // Graceful shutdown
     process.on('SIGINT', () => {
       console.log('\n🛑 Shutting down subscriptions...');
@@ -174,7 +179,6 @@ async function runSubscriptionTests() {
       wsClient.dispose();
       process.exit(0);
     });
-
   } catch (error) {
     console.error('💥 Subscription test failed:', error);
     wsClient.dispose();

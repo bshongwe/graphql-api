@@ -35,12 +35,15 @@ export async function initializePubSub(): Promise<void> {
   try {
     await publisher.connect();
     await subscriber.connect();
-    
-    logger.info({
-      host: redisConfig.host,
-      port: redisConfig.port,
-      database: redisConfig.database,
-    }, 'Redis PubSub initialized successfully');
+
+    logger.info(
+      {
+        host: redisConfig.host,
+        port: redisConfig.port,
+        database: redisConfig.database,
+      },
+      'Redis PubSub initialized successfully'
+    );
 
     // Handle Redis connection events
     publisher.on('error', (err: Error) => {
@@ -58,7 +61,6 @@ export async function initializePubSub(): Promise<void> {
     subscriber.on('connect', () => {
       logger.info('Redis Subscriber connected');
     });
-
   } catch (error) {
     logger.error(error, 'Failed to initialize Redis PubSub');
     throw error;
@@ -108,7 +110,10 @@ export class UserEventPublisher {
     }
   }
 
-  static async publishUserUpdated(user: any, previousValues?: any): Promise<void> {
+  static async publishUserUpdated(
+    user: any,
+    previousValues?: any
+  ): Promise<void> {
     try {
       await pubSub.publish(SUBSCRIPTION_TOPICS.USER_UPDATED, {
         userUpdated: {
@@ -123,7 +128,10 @@ export class UserEventPublisher {
     }
   }
 
-  static async publishUserDeleted(user: { id: string; email: string }): Promise<void> {
+  static async publishUserDeleted(user: {
+    id: string;
+    email: string;
+  }): Promise<void> {
     try {
       await pubSub.publish(SUBSCRIPTION_TOPICS.USER_DELETED, {
         userDeleted: {

@@ -14,15 +14,17 @@ export function createJobDashboard() {
     serverAdapter.setBasePath('/admin/queues');
 
     // Create Bull Board with all queues
-    const { addQueue, removeQueue, setQueues, replaceQueues } = createBullBoard({
-      queues: [
-        new BullMQAdapter(queues.emailQueue),
-        new BullMQAdapter(queues.userProcessingQueue),
-        new BullMQAdapter(queues.notificationsQueue),
-        new BullMQAdapter(queues.dataExportQueue),
-      ],
-      serverAdapter,
-    });
+    const { addQueue, removeQueue, setQueues, replaceQueues } = createBullBoard(
+      {
+        queues: [
+          new BullMQAdapter(queues.emailQueue),
+          new BullMQAdapter(queues.userProcessingQueue),
+          new BullMQAdapter(queues.notificationsQueue),
+          new BullMQAdapter(queues.dataExportQueue),
+        ],
+        serverAdapter,
+      }
+    );
 
     logger.info('Bull Board dashboard created successfully');
 
@@ -46,21 +48,27 @@ export function createJobDashboard() {
 export function dashboardAuthMiddleware() {
   return (req: any, res: any, next: any) => {
     const authHeader = req.headers.authorization;
-    
+
     // Simple token check - replace with proper auth in production
     if (process.env.NODE_ENV === 'production') {
-      if (!authHeader || authHeader !== `Bearer ${process.env.DASHBOARD_TOKEN}`) {
+      if (
+        !authHeader ||
+        authHeader !== `Bearer ${process.env.DASHBOARD_TOKEN}`
+      ) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
     }
-    
+
     // In development, allow all access
-    logger.info({ 
-      ip: req.ip, 
-      userAgent: req.get('User-Agent'),
-      path: req.path
-    }, 'Dashboard access');
-    
+    logger.info(
+      {
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        path: req.path,
+      },
+      'Dashboard access'
+    );
+
     next();
   };
 }

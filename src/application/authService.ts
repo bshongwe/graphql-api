@@ -8,7 +8,15 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 export class AuthService {
   constructor(private readonly userService: UserService) {}
 
-  async signUp({ name, email, password }: { name: string; email: string; password: string }) {
+  async signUp({
+    name,
+    email,
+    password,
+  }: {
+    name: string;
+    email: string;
+    password: string;
+  }) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -21,11 +29,9 @@ export class AuthService {
     });
 
     // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
+      expiresIn: '7d',
+    });
 
     return {
       token,
@@ -49,11 +55,9 @@ export class AuthService {
     }
 
     // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
+      expiresIn: '7d',
+    });
 
     return {
       token,
@@ -63,7 +67,10 @@ export class AuthService {
 
   async getUserFromToken(token: string) {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; email: string };
+      const decoded = jwt.verify(token, JWT_SECRET) as {
+        userId: number;
+        email: string;
+      };
       const user = await this.userService.findById(decoded.userId);
       return user ? user.toPublic() : null;
     } catch {
