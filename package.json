@@ -40,11 +40,11 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@apollo/composition": "^2.12.1",
-    "@apollo/federation-internals": "^2.12.1",
-    "@apollo/gateway": "^2.12.1",
+    "@apollo/composition": "^2.12.2",
+    "@apollo/federation-internals": "^2.12.2",
+    "@apollo/gateway": "^2.12.2",
     "@apollo/server": "^5.2.0",
-    "@apollo/subgraph": "^2.12.1",
+    "@apollo/subgraph": "^2.12.2",
     "@bull-board/api": "^6.15.0",
     "@bull-board/express": "^6.15.0",
     "@opentelemetry/api": "^1.9.0",
@@ -90,7 +90,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "@apollo/client": "^4.0.9",
+    "@apollo/client": "^4.1.0",
     "@testcontainers/postgresql": "^11.9.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
