@@ -1,0 +1,70 @@
+version: 2
+updates:
+  # NPM Dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "${{ github.repository_owner }}"
+    assignees:
+      - "${{ github.repository_owner }}"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "npm"
+    versioning-strategy: increase
+    groups:
+      apollo:
+        patterns:
+          - "@apollo/*"
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
+          - "ts-*"
+      testing:
+        patterns:
+          - "jest"
+          - "@types/jest"
+          - "ts-jest"
+          - "supertest"
+      prisma:
+        patterns:
+          - "prisma"
+          - "@prisma/*"
+      opentelemetry:
+        patterns:
+          - "@opentelemetry/*"
+
+  # Docker Dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    reviewers:
+      - "${{ github.repository_owner }}"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    reviewers:
+      - "${{ github.repository_owner }}"
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "dependencies"
+      - "github-actions"

@@ -1,0 +1,265 @@
+name: CD - Production Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version/tag to deploy'
+        required: true
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================
+  # Pre-deployment Validation
+  # ============================================
+  validate:
+    name: Pre-deployment Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version }}
+
+      - name: Validate version exists
+        run: |
+          if ! git rev-parse ${{ github.event.inputs.version }} >/dev/null 2>&1; then
+            echo "Error: Version ${{ github.event.inputs.version }} does not exist"
+            exit 1
+          fi
+
+      - name: Verify Docker image exists
+        run: |
+          docker manifest inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.version }} || {
+            echo "Error: Docker image not found"
+            exit 1
+          }
+
+  # ============================================
+  # Database Migration
+  # ============================================
+  migrate:
+    name: Database Migration
+    runs-on: ubuntu-latest
+    needs: validate
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Prisma migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Verify migration
+        run: npx prisma migrate status
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  # ============================================
+  # Blue-Green Deployment
+  # ============================================
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+    needs: migrate
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version }}
+
+      - name: Configure kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Set up Kubernetes context
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Backup current deployment
+        run: |
+          NAMESPACE="graphql-api-${{ github.event.inputs.environment }}"
+          kubectl get all -n $NAMESPACE -o yaml > backup-${{ github.run_id }}.yaml
+
+      - name: Upload backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-backup-${{ github.run_id }}
+          path: backup-${{ github.run_id }}.yaml
+
+      - name: Deploy new version
+        run: |
+          NAMESPACE="graphql-api-${{ github.event.inputs.environment }}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.version }}"
+          
+          kubectl set image deployment/graphql-api-deployment \
+            graphql-api=$IMAGE \
+            -n $NAMESPACE
+          
+          kubectl annotate deployment/graphql-api-deployment \
+            kubernetes.io/change-cause="Deployed version ${{ github.event.inputs.version }}" \
+            -n $NAMESPACE
+
+      - name: Wait for rollout
+        run: |
+          NAMESPACE="graphql-api-${{ github.event.inputs.environment }}"
+          kubectl rollout status deployment/graphql-api-deployment \
+            -n $NAMESPACE --timeout=10m
+
+      - name: Verify health checks
+        run: |
+          NAMESPACE="graphql-api-${{ github.event.inputs.environment }}"
+          kubectl wait --for=condition=ready pod \
+            -l app=graphql-api \
+            -n $NAMESPACE \
+            --timeout=5m
+
+  # ============================================
+  # Post-deployment Tests
+  # ============================================
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: deploy
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Set up Kubernetes context
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Health check
+        run: |
+          NAMESPACE="graphql-api-${{ github.event.inputs.environment }}"
+          kubectl run smoke-test-health \
+            --image=curlimages/curl:latest \
+            --rm -i --restart=Never \
+            -n $NAMESPACE \
+            -- curl -f http://graphql-api-service:4001/health
+
+      - name: GraphQL introspection test
+        run: |
+          NAMESPACE="graphql-api-${{ github.event.inputs.environment }}"
+          kubectl run smoke-test-graphql \
+            --image=curlimages/curl:latest \
+            --rm -i --restart=Never \
+            -n $NAMESPACE \
+            -- curl -f -X POST http://graphql-api-service:4000/graphql \
+            -H "Content-Type: application/json" \
+            -d '{"query": "{ __schema { queryType { name } } }"}'
+
+  # ============================================
+  # Rollback on Failure
+  # ============================================
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy, smoke-tests]
+    if: failure()
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Configure kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Set up Kubernetes context
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Rollback deployment
+        run: |
+          NAMESPACE="graphql-api-${{ github.event.inputs.environment }}"
+          kubectl rollout undo deployment/graphql-api-deployment \
+            -n $NAMESPACE
+
+      - name: Verify rollback
+        run: |
+          NAMESPACE="graphql-api-${{ github.event.inputs.environment }}"
+          kubectl rollout status deployment/graphql-api-deployment \
+            -n $NAMESPACE --timeout=5m
+
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: "🚨 Deployment rollback executed for ${{ github.event.inputs.environment }}",
+              attachments: [{
+                color: 'danger',
+                text: `Version: ${{ github.event.inputs.version }}\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================
+  # Success Notification
+  # ============================================
+  notify:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy, smoke-tests]
+    if: success()
+    
+    steps:
+      - name: Send Slack notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: "✅ Successfully deployed to ${{ github.event.inputs.environment }}",
+              attachments: [{
+                color: 'good',
+                text: `Version: ${{ github.event.inputs.version }}\nDeployed by: ${{ github.actor }}\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create deployment record
+        uses: chrnorm/deployment-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ github.event.inputs.environment }}
+          ref: ${{ github.event.inputs.version }}
