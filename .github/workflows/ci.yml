@@ -306,25 +306,41 @@ jobs:
       url: https://staging-api.example.com
 
     steps:
+      - name: Check if Kubernetes config is available
+        id: check-kube-config
+        run: |
+          if [ -z "${{ secrets.KUBE_CONFIG_STAGING }}" ]; then
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "::notice title=Deployment Skipped::KUBE_CONFIG_STAGING secret not configured. Skipping staging deployment."
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout code
+        if: steps.check-kube-config.outputs.configured == 'true'
         uses: actions/checkout@v6
 
       - name: Configure kubectl
+        if: steps.check-kube-config.outputs.configured == 'true'
         uses: azure/setup-kubectl@v4
 
       - name: Set up Kubernetes context
+        if: steps.check-kube-config.outputs.configured == 'true'
         uses: azure/k8s-set-context@v3
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+          cluster-type: generic
 
       - name: Deploy to Kubernetes
+        if: steps.check-kube-config.outputs.configured == 'true'
         run: |
           kubectl set image deployment/graphql-api-deployment \
             graphql-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             -n graphql-api-staging
 
       - name: Verify deployment
+        if: steps.check-kube-config.outputs.configured == 'true'
         run: |
           kubectl rollout status deployment/graphql-api-deployment \
             -n graphql-api-staging --timeout=5m
@@ -350,30 +366,47 @@ jobs:
       url: https://api.example.com
 
     steps:
+      - name: Check if Kubernetes config is available
+        id: check-kube-config
+        run: |
+          if [ -z "${{ secrets.KUBE_CONFIG_PRODUCTION }}" ]; then
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "::notice title=Deployment Skipped::KUBE_CONFIG_PRODUCTION secret not configured. Skipping production deployment."
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout code
+        if: steps.check-kube-config.outputs.configured == 'true'
         uses: actions/checkout@v6
 
       - name: Configure kubectl
+        if: steps.check-kube-config.outputs.configured == 'true'
         uses: azure/setup-kubectl@v4
 
       - name: Set up Kubernetes context
+        if: steps.check-kube-config.outputs.configured == 'true'
         uses: azure/k8s-set-context@v3
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
+          cluster-type: generic
 
       - name: Create deployment backup
+        if: steps.check-kube-config.outputs.configured == 'true'
         run: |
           kubectl get deployment graphql-api-deployment \
             -n graphql-api -o yaml > deployment-backup.yaml
 
       - name: Deploy to Kubernetes
+        if: steps.check-kube-config.outputs.configured == 'true'
         run: |
           kubectl set image deployment/graphql-api-deployment \
             graphql-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             -n graphql-api
 
       - name: Verify deployment
+        if: steps.check-kube-config.outputs.configured == 'true'
         run: |
           kubectl rollout status deployment/graphql-api-deployment \
             -n graphql-api --timeout=10m
