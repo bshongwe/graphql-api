@@ -6,7 +6,7 @@ export function createLoaders() {
     const rows = await prisma.user.findMany({
       where: { id: { in: ids as number[] } },
     });
-    const map = new Map(rows.map((r) => [r.id, r]));
+    const map = new Map(rows.map(r => [r.id, r]));
     return ids.map(id => map.get(id as number) ?? null);
   });
 

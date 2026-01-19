@@ -1,7 +1,5 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import {
-  getNodeAutoInstrumentations,
-} from '@opentelemetry/auto-instrumentations-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { ZipkinExporter } from '@opentelemetry/exporter-zipkin';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
 

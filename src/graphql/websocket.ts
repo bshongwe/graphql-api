@@ -7,9 +7,7 @@ import { dirname, join } from 'path';
 import type { GraphQLError, ExecutionResult } from 'graphql';
 import type { Server } from 'http';
 import { resolvers } from './resolvers/index.js';
-import { 
-  subscriptionHandlers 
-} from './resolvers/subscriptionResolvers.js';
+import { subscriptionHandlers } from './resolvers/subscriptionResolvers.js';
 import { createContext } from '../context.js';
 import { logger } from '../infrastructure/logger.js';
 
@@ -20,10 +18,7 @@ const __dirname = dirname(__filename);
  * Create GraphQL schema for subscriptions
  */
 function createSubscriptionSchema() {
-  const typeDefs = readFileSync(
-    join(__dirname, './schema.graphql'),
-    'utf8'
-  );
+  const typeDefs = readFileSync(join(__dirname, './schema.graphql'), 'utf8');
 
   return buildSubgraphSchema({ typeDefs, resolvers });
 }
@@ -64,11 +59,7 @@ export async function createWebSocketServer(httpServer: Server) {
           'WebSocket subscription started'
         );
 
-        return subscriptionHandlers.onOperationStart?.(
-          msg,
-          msg.payload,
-          ctx
-        );
+        return subscriptionHandlers.onOperationStart?.(msg, msg.payload, ctx);
       },
 
       onComplete: async (_ctx: any, msg: any) => {
@@ -79,10 +70,7 @@ export async function createWebSocketServer(httpServer: Server) {
           'WebSocket subscription completed'
         );
 
-        return subscriptionHandlers.onOperationComplete?.(
-          _ctx,
-          msg.id
-        );
+        return subscriptionHandlers.onOperationComplete?.(_ctx, msg.id);
       },
 
       onNext: async (
@@ -104,9 +92,9 @@ export async function createWebSocketServer(httpServer: Server) {
         logger.error(
           {
             operationId: msg.id,
-            errors: errors.map((e) => ({ 
-              message: e.message, 
-              path: e.path 
+            errors: errors.map(e => ({
+              message: e.message,
+              path: e.path,
             })),
           },
           'WebSocket subscription error'

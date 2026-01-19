@@ -50,7 +50,7 @@ export const userResolver = {
           Number.parseInt(id, 10)
         );
         if (!user) return null;
-        
+
         return {
           ...user.toPublic(),
           createdAt: new Date().toISOString(),
@@ -63,9 +63,7 @@ export const userResolver = {
       if (!context.currentUser?.id) return null;
 
       // Use service layer for proper typing
-      const user = await context.userService.findById(
-        context.currentUser.id
-      );
+      const user = await context.userService.findById(context.currentUser.id);
       if (!user) return null;
 
       return {
