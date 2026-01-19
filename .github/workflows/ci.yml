@@ -62,8 +62,7 @@ jobs:
   schema-check:
     name: Apollo Schema Check
     runs-on: ubuntu-latest
-    # Run on PRs or when manually triggered
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    # Always run schema checks (skip condition removed)
     
     steps:
       - name: Checkout code
