@@ -7,7 +7,6 @@ import { resolvers } from '../../src/graphql/resolvers/index.js';
 import { createContext } from '../../src/context.js';
 
 export class GraphQLTestClient {
-  private app: any;
   private server?: ApolloServer;
   private url?: string;
 

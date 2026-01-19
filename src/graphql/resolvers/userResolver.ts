@@ -1,17 +1,8 @@
-import { UserService } from '../../application/userService.js';
-import { AuthService } from '../../application/authService.js';
-import { createLoaders } from '../dataloaders.js';
 import { GraphQLError } from 'graphql';
 import { AppError } from '../../utils/errorHandler.js';
 import { UserEventPublisher } from '../../infrastructure/pubsub.js';
 import { JobService, JOB_TYPES } from '../../infrastructure/jobQueue.js';
-
-interface Context {
-  authService: AuthService;
-  userService: UserService;
-  currentUser?: any;
-  loaders: ReturnType<typeof createLoaders>;
-}
+import type { Context } from '../../context.js';
 
 // Helper function to handle errors and convert them to GraphQL errors
 function handleResolverError(error: unknown): never {

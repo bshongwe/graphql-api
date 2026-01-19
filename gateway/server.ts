@@ -1,6 +1,7 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { ApolloGateway, IntrospectAndCompose } from '@apollo/gateway';
+import type { GraphQLFormattedError } from 'graphql';
 
 async function startGateway() {
   const gateway = new ApolloGateway({
@@ -21,13 +22,13 @@ async function startGateway() {
 
   const server = new ApolloServer({
     gateway,
-    formatError: (err) => {
-      console.error('Gateway error:', err);
-      return {
-        message: err.message,
-        code: err.extensions?.code,
-        path: err.path,
-      };
+    formatError: (
+      formattedError: GraphQLFormattedError,
+      _error: unknown
+    ): GraphQLFormattedError => {
+      console.error('Gateway error:', formattedError);
+      // Return the formatted error as-is to maintain type compatibility
+      return formattedError;
     },
   });
 

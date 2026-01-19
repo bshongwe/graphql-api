@@ -1,11 +1,13 @@
 import { WebSocketServer } from 'ws';
+// @ts-expect-error - graphql-ws uses exports that require node16 module resolution
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { parse } from 'graphql';
 import type { GraphQLError, ExecutionResult } from 'graphql';
-import type { Server } from 'http';
+import type { Server } from 'node:http';
 import { resolvers } from './resolvers/index.js';
 import { subscriptionHandlers } from './resolvers/subscriptionResolvers.js';
 import { createContext } from '../context.js';
@@ -18,9 +20,16 @@ const __dirname = dirname(__filename);
  * Create GraphQL schema for subscriptions
  */
 function createSubscriptionSchema() {
-  const typeDefs = readFileSync(join(__dirname, './schema.graphql'), 'utf8');
+  const typeDefsString = readFileSync(
+    join(__dirname, './schema.graphql'),
+    'utf8'
+  );
 
-  return buildSubgraphSchema({ typeDefs, resolvers });
+  // Parse the string into a DocumentNode for buildSubgraphSchema
+  const typeDefs = parse(typeDefsString);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return buildSubgraphSchema({ typeDefs, resolvers: resolvers as any });
 }
 
 /**

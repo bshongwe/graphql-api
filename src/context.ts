@@ -4,14 +4,14 @@ import { UserRepository } from './infrastructure/userRepository.js';
 import { prisma } from './infrastructure/prismaClient.js';
 import { createLoaders } from './graphql/dataloaders.js';
 
-interface User {
+export interface User {
   id: number | null;
   name: string;
   email: string;
   role: string;
 }
 
-interface Context {
+export interface Context {
   authService: AuthService;
   userService: UserService;
   currentUser?: User | null;
