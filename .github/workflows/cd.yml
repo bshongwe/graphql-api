@@ -111,7 +111,7 @@ jobs:
           kubectl get all -n $NAMESPACE -o yaml > backup-${{ github.run_id }}.yaml
 
       - name: Upload backup
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: deployment-backup-${{ github.run_id }}
           path: backup-${{ github.run_id }}.yaml
