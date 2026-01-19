@@ -346,6 +346,7 @@ jobs:
             -n graphql-api-staging --timeout=5m
 
       - name: Run smoke tests
+        if: steps.check-kube-config.outputs.configured == 'true'
         run: |
           kubectl run smoke-test \
             --image=curlimages/curl:latest \
@@ -412,6 +413,7 @@ jobs:
             -n graphql-api --timeout=10m
 
       - name: Run production smoke tests
+        if: steps.check-kube-config.outputs.configured == 'true'
         run: |
           kubectl run smoke-test \
             --image=curlimages/curl:latest \
