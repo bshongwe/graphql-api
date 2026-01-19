@@ -87,7 +87,7 @@
     "redis": "^5.10.0",
     "reflect-metadata": "^0.2.2",
     "ws": "^8.18.3",
-    "zod": "^4.1.13"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@apollo/client": "^4.1.0",
