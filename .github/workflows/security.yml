@@ -48,7 +48,7 @@ jobs:
 
       - name: Upload audit results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: npm-audit-results
           path: audit-results.json
@@ -150,7 +150,7 @@ jobs:
 
       - name: Upload scan results
         if: steps.check-image.outputs.exists == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: trivy-scan-results
           path: trivy-results.json
@@ -224,7 +224,7 @@ jobs:
           npx license-checker --csv > licenses.csv
 
       - name: Upload license reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: license-reports
           path: |
