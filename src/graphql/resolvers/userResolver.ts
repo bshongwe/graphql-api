@@ -44,27 +44,34 @@ export const userResolver = {
         createdAt: new Date().toISOString(), // Add createdAt field
       }));
     },
+    user: async (_: any, { id }: { id: string }, context: Context) => {
+      try {
+        const user = await context.userService.findById(
+          Number.parseInt(id, 10)
+        );
+        if (!user) return null;
+        
+        return {
+          ...user.toPublic(),
+          createdAt: new Date().toISOString(),
+        };
+      } catch (error) {
+        handleResolverError(error);
+      }
+    },
     me: async (_: any, __: any, context: Context) => {
       if (!context.currentUser?.id) return null;
 
-      // Option 1: Use DataLoader for potential caching/batching benefits
-      const user = await context.loaders.userLoader.load(
+      // Use service layer for proper typing
+      const user = await context.userService.findById(
         context.currentUser.id
       );
       if (!user) return null;
 
-      // Convert Prisma result to domain model and return public data
-      const { password, ...publicData } = user;
       return {
-        ...publicData,
+        ...user.toPublic(),
         createdAt: new Date().toISOString(), // Add createdAt field
       };
-
-      // Option 2: Use service layer
-      // (uncomment if you prefer domain model approach)
-      // const user = await context.userService
-      //   .findById(context.currentUser.id);
-      // return user.toPublic();
     },
   },
   Mutation: {

@@ -1,14 +1,17 @@
-import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
-import { useServer } from 'graphql-ws/use/ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { resolvers } from '../resolvers/index.js';
-import { subscriptionHandlers } from '../resolvers/subscriptionResolvers.js';
-import { createContext } from '../../context.js';
-import { logger } from '../../infrastructure/logger.js';
+import type { GraphQLError, ExecutionResult } from 'graphql';
+import type { Server } from 'http';
+import { resolvers } from './resolvers/index.js';
+import { 
+  subscriptionHandlers 
+} from './resolvers/subscriptionResolvers.js';
+import { createContext } from '../context.js';
+import { logger } from '../infrastructure/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,7 +20,10 @@ const __dirname = dirname(__filename);
  * Create GraphQL schema for subscriptions
  */
 function createSubscriptionSchema() {
-  const typeDefs = readFileSync(join(__dirname, '../schema.graphql'), 'utf8');
+  const typeDefs = readFileSync(
+    join(__dirname, './schema.graphql'),
+    'utf8'
+  );
 
   return buildSubgraphSchema({ typeDefs, resolvers });
 }
@@ -25,7 +31,7 @@ function createSubscriptionSchema() {
 /**
  * Create WebSocket server for GraphQL subscriptions
  */
-export async function createWebSocketServer(httpServer: any) {
+export async function createWebSocketServer(httpServer: Server) {
   // Create WebSocket server
   const wsServer = new WebSocketServer({
     server: httpServer,
@@ -38,8 +44,9 @@ export async function createWebSocketServer(httpServer: any) {
   const serverCleanup = useServer(
     {
       schema,
-      context: async (ctx, msg, args) => {
-        // Create context similar to HTTP context but for WebSocket connections
+      context: async (ctx: any, _msg: any, _args: any) => {
+        // Create context similar to HTTP context
+        // but for WebSocket connections
         return createContext({ req: ctx.extra.request });
       },
 
@@ -48,7 +55,7 @@ export async function createWebSocketServer(httpServer: any) {
       onDisconnect: subscriptionHandlers.onDisconnect,
 
       // Operation lifecycle handlers
-      onSubscribe: async (ctx, msg) => {
+      onSubscribe: async (ctx: any, msg: any) => {
         logger.info(
           {
             operationName: msg.payload.operationName,
@@ -57,10 +64,14 @@ export async function createWebSocketServer(httpServer: any) {
           'WebSocket subscription started'
         );
 
-        return subscriptionHandlers.onOperationStart?.(msg, msg.payload, ctx);
+        return subscriptionHandlers.onOperationStart?.(
+          msg,
+          msg.payload,
+          ctx
+        );
       },
 
-      onComplete: async (ctx, msg) => {
+      onComplete: async (_ctx: any, msg: any) => {
         logger.info(
           {
             operationId: msg.id,
@@ -68,10 +79,18 @@ export async function createWebSocketServer(httpServer: any) {
           'WebSocket subscription completed'
         );
 
-        return subscriptionHandlers.onOperationComplete?.(ctx, msg.id);
+        return subscriptionHandlers.onOperationComplete?.(
+          _ctx,
+          msg.id
+        );
       },
 
-      onNext: async (ctx, msg, args, result) => {
+      onNext: async (
+        _ctx: any,
+        msg: any,
+        _args: any,
+        result: ExecutionResult
+      ) => {
         logger.debug(
           {
             operationId: msg.id,
@@ -81,11 +100,14 @@ export async function createWebSocketServer(httpServer: any) {
         );
       },
 
-      onError: async (ctx, msg, errors) => {
+      onError: async (_ctx: any, msg: any, errors: readonly GraphQLError[]) => {
         logger.error(
           {
             operationId: msg.id,
-            errors: errors.map(e => ({ message: e.message, path: e.path })),
+            errors: errors.map((e) => ({ 
+              message: e.message, 
+              path: e.path 
+            })),
           },
           'WebSocket subscription error'
         );

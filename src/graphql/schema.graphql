@@ -3,6 +3,7 @@ extend schema
 
 type Query {
   users: [User!]! @shareable
+  user(id: ID!): User
   me: User
 }
 

@@ -1,13 +1,15 @@
 import { PrismaClient } from '@prisma/client';
 import { User } from '../domain/user.js';
-import { UserRepositoryInterface } from '../domain/userRepositoryInterface.js';
+import { 
+  UserRepositoryInterface 
+} from '../domain/userRepositoryInterface.js';
 
 export class UserRepository implements UserRepositoryInterface {
   constructor(private readonly prisma: PrismaClient) {}
 
   async findAll(): Promise<User[]> {
     const users = await this.prisma.user.findMany();
-    return users.map(user => User.fromPrisma(user));
+    return users.map((user) => User.fromPrisma(user));
   }
 
   async findById(id: number): Promise<User | null> {
@@ -27,7 +29,7 @@ export class UserRepository implements UserRepositoryInterface {
       },
     });
 
-    return users.map(user => User.fromPrisma(user));
+    return users.map((user) => User.fromPrisma(user));
   }
 
   async findByEmail(email: string): Promise<User | null> {

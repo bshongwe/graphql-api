@@ -429,6 +429,43 @@ const gateway = new ApolloGateway({
 });
 ```
 
+### Apollo GraphOS Integration
+This API is integrated with **Apollo GraphOS** for schema management and validation:
+
+- **Graph ID**: `GraphQL-API-fwa9oj`
+- **Subgraph Name**: `users`
+- **Variants**: `main` (production), `staging` (staging)
+
+#### Automated Schema Operations
+- **Pull Request Checks**: Schema validation runs automatically on every PR
+- **Deployment Publishing**: Schema published to GraphOS on successful deployments
+- **Breaking Change Detection**: CI fails if breaking changes are detected
+- **Schema History**: All schema changes tracked in Apollo Studio
+
+#### Quick Commands
+```bash
+# Check schema for breaking changes (local)
+rover subgraph check GraphQL-API-fwa9oj@main \
+  --name users \
+  --schema ./src/graphql/schema.graphql
+
+# Publish schema manually
+rover subgraph publish GraphQL-API-fwa9oj@main \
+  --name users \
+  --schema ./src/graphql/schema.graphql \
+  --routing-url "https://api.yourdomain.com/graphql"
+
+# View current schema
+rover subgraph fetch GraphQL-API-fwa9oj@main --name users
+```
+
+#### Setup Instructions
+See [Apollo GraphOS Setup Guide](docs/APOLLO_GRAPHOS_SETUP.md) for:
+- Required GitHub secrets configuration
+- Schema validation workflow
+- Deployment publishing workflow
+- Best practices for schema evolution
+
 ## 📚 API Documentation
 
 ### Authentication
