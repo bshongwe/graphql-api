@@ -5,6 +5,7 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -58,7 +59,8 @@ jobs:
   schema-check:
     name: Apollo Schema Check
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    # Run on PRs or when manually triggered
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     
     steps:
       - name: Checkout code
@@ -72,14 +74,13 @@ jobs:
       - name: Run Schema Check
         env:
           APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
-          APOLLO_GRAPH_REF: GraphQL-API-fwa9oj@main
         run: |
-          rover subgraph check $APOLLO_GRAPH_REF \
+          rover subgraph check GraphQL-API-fwa9oj@main \
             --name users \
             --schema ./src/graphql/schema.graphql
 
       - name: Comment PR with Schema Check Results
-        if: always()
+        if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
