@@ -58,29 +58,29 @@ export const JOB_TYPES = {
  * Initialize job queues
  */
 export const queues = {
-  emailQueue: new Queue(JOB_QUEUES.EMAIL, { connection: redis }),
+  emailQueue: new Queue(JOB_QUEUES.EMAIL, { connection: redisConnectionConfig }),
   userProcessingQueue: new Queue(JOB_QUEUES.USER_PROCESSING, {
-    connection: redis,
+    connection: redisConnectionConfig,
   }),
   notificationsQueue: new Queue(JOB_QUEUES.NOTIFICATIONS, {
-    connection: redis,
+    connection: redisConnectionConfig,
   }),
-  dataExportQueue: new Queue(JOB_QUEUES.DATA_EXPORT, { connection: redis }),
+  dataExportQueue: new Queue(JOB_QUEUES.DATA_EXPORT, { connection: redisConnectionConfig }),
 };
 
 /**
  * Queue events for monitoring
  */
 export const queueEvents = {
-  emailEvents: new QueueEvents(JOB_QUEUES.EMAIL, { connection: redis }),
+  emailEvents: new QueueEvents(JOB_QUEUES.EMAIL, { connection: redisConnectionConfig }),
   userProcessingEvents: new QueueEvents(JOB_QUEUES.USER_PROCESSING, {
-    connection: redis,
+    connection: redisConnectionConfig,
   }),
   notificationsEvents: new QueueEvents(JOB_QUEUES.NOTIFICATIONS, {
-    connection: redis,
+    connection: redisConnectionConfig,
   }),
   dataExportEvents: new QueueEvents(JOB_QUEUES.DATA_EXPORT, {
-    connection: redis,
+    connection: redisConnectionConfig,
   }),
 };
 
