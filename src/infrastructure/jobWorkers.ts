@@ -1,5 +1,5 @@
 import { Worker, Job } from 'bullmq';
-import { redis, JOB_QUEUES, JOB_TYPES } from './jobQueue.js';
+import { redisConnectionConfig, JOB_QUEUES, JOB_TYPES } from './jobQueue.js';
 import { logger } from './logger.js';
 import type {
   EmailJobData,
@@ -224,7 +224,7 @@ async function processDataExportJob(job: Job<DataExportJobData>) {
  */
 export const workers = {
   emailWorker: new Worker(JOB_QUEUES.EMAIL, processEmailJob, {
-    connection: redis,
+    connection: redisConnectionConfig,
     concurrency: 5,
     limiter: {
       max: 10,
@@ -233,7 +233,7 @@ export const workers = {
   }),
 
   userProcessingWorker: new Worker(JOB_QUEUES.USER_PROCESSING, processUserJob, {
-    connection: redis,
+    connection: redisConnectionConfig,
     concurrency: 3,
     limiter: {
       max: 20,
@@ -245,7 +245,7 @@ export const workers = {
     JOB_QUEUES.NOTIFICATIONS,
     processNotificationJob,
     {
-      connection: redis,
+      connection: redisConnectionConfig,
       concurrency: 8,
       limiter: {
         max: 50,
@@ -255,7 +255,7 @@ export const workers = {
   ),
 
   dataExportWorker: new Worker(JOB_QUEUES.DATA_EXPORT, processDataExportJob, {
-    connection: redis,
+    connection: redisConnectionConfig,
     concurrency: 2,
     limiter: {
       max: 5,

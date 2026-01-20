@@ -27,6 +27,11 @@ const redisConnection = {
 export const redis = new IORedis(redisConnection);
 
 /**
+ * Export connection config for BullMQ workers
+ */
+export const redisConnectionConfig = redisConnection;
+
+/**
  * Job queue definitions
  */
 export const JOB_QUEUES = {
