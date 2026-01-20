@@ -91,7 +91,7 @@
   },
   "devDependencies": {
     "@apollo/client": "^4.1.0",
-    "@testcontainers/postgresql": "^11.9.0",
+    "@testcontainers/postgresql": "^11.11.0",
     "@types/bcryptjs": "^3.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
