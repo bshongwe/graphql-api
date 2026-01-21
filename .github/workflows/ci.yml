@@ -475,6 +475,7 @@ jobs:
         with:
           filename: tests/performance/load-test.js
         env:
+          BASE_URL: https://staging-api.example.com
           K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
 
       - name: Upload performance results

@@ -103,8 +103,13 @@ export default function () {
     check(userRes, {
       'user query status is 200': (r) => r.status === 200,
       'user query has data': (r) => {
-        const body = JSON.parse(r.body);
-        return body.data && body.data.user;
+        if (!r || !r.body) return false;
+        try {
+          const body = JSON.parse(r.body);
+          return body.data && body.data.user;
+        } catch (e) {
+          return false;
+        }
       },
     }) || errorRate.add(1);
   }
@@ -115,8 +120,13 @@ export default function () {
     check(usersRes, {
       'users query status is 200': (r) => r.status === 200,
       'users query has data': (r) => {
-        const body = JSON.parse(r.body);
-        return body.data && Array.isArray(body.data.users);
+        if (!r || !r.body) return false;
+        try {
+          const body = JSON.parse(r.body);
+          return body.data && Array.isArray(body.data.users);
+        } catch (e) {
+          return false;
+        }
       },
     }) || errorRate.add(1);
   }
@@ -131,8 +141,13 @@ export default function () {
     check(createRes, {
       'create user status is 200': (r) => r.status === 200,
       'create user has data': (r) => {
-        const body = JSON.parse(r.body);
-        return body.data && body.data.createUser;
+        if (!r || !r.body) return false;
+        try {
+          const body = JSON.parse(r.body);
+          return body.data && body.data.createUser;
+        } catch (e) {
+          return false;
+        }
       },
     }) || errorRate.add(1);
   }
