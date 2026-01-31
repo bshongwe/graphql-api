@@ -66,7 +66,7 @@
     "bullmq": "^5.66.5",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "dataloader": "^2.2.3",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
