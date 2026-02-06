@@ -43,7 +43,7 @@
     "@apollo/composition": "^2.13.0",
     "@apollo/federation-internals": "^2.13.0",
     "@apollo/gateway": "^2.13.0",
-    "@apollo/server": "^5.3.0",
+    "@apollo/server": "^5.4.0",
     "@apollo/subgraph": "^2.13.0",
     "@bull-board/api": "^6.16.4",
     "@bull-board/express": "^6.16.4",
@@ -90,7 +90,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@apollo/client": "^4.1.2",
+    "@apollo/client": "^4.1.4",
     "@testcontainers/postgresql": "^11.11.0",
     "@types/bcryptjs": "^3.0.0",
     "@types/cors": "^2.8.19",
