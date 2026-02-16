@@ -145,7 +145,7 @@ jobs:
         uses: azure/setup-kubectl@v4
 
       - name: Set up Kubernetes context
-        uses: azure/k8s-set-context@v3
+        uses: azure/k8s-set-context@v4
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG }}
@@ -205,7 +205,7 @@ jobs:
         uses: azure/setup-kubectl@v4
 
       - name: Set up Kubernetes context
-        uses: azure/k8s-set-context@v3
+        uses: azure/k8s-set-context@v4
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG }}
@@ -245,7 +245,7 @@ jobs:
         uses: azure/setup-kubectl@v4
 
       - name: Set up Kubernetes context
-        uses: azure/k8s-set-context@v3
+        uses: azure/k8s-set-context@v4
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG }}
