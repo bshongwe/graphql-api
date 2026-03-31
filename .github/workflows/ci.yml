@@ -351,7 +351,7 @@ jobs:
 
       - name: Set up Kubernetes context
         if: steps.check-kube-config.outputs.configured == 'true'
-        uses: azure/k8s-set-context@v3
+        uses: azure/k8s-set-context@v4
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
@@ -414,7 +414,7 @@ jobs:
 
       - name: Set up Kubernetes context
         if: steps.check-kube-config.outputs.configured == 'true'
-        uses: azure/k8s-set-context@v3
+        uses: azure/k8s-set-context@v4
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
