@@ -347,7 +347,7 @@ jobs:
 
       - name: Configure kubectl
         if: steps.check-kube-config.outputs.configured == 'true'
-        uses: azure/setup-kubectl@v4
+        uses: azure/setup-kubectl@v5
 
       - name: Set up Kubernetes context
         if: steps.check-kube-config.outputs.configured == 'true'
@@ -410,7 +410,7 @@ jobs:
 
       - name: Configure kubectl
         if: steps.check-kube-config.outputs.configured == 'true'
-        uses: azure/setup-kubectl@v4
+        uses: azure/setup-kubectl@v5
 
       - name: Set up Kubernetes context
         if: steps.check-kube-config.outputs.configured == 'true'
